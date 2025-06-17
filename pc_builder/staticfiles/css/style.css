@@ -1,0 +1,460 @@
+/* CSS Reset (Можно заменить на Normalize.css) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* === Конец CSS Reset === */
+
+/* ===  Переменные CSS === */
+:root {
+  --primary-color: #5b3a29; /* Тёмно-коричневый текст */
+  --secondary-color: #d9c4b1; /* Светло-коричневый (навигация, акценты) */
+  --background-color: #f9f6f2; /* Светлый бежевый фон */
+  --card-background: #ffffff; /* Белый фон карточек */
+  --border-color: #d1b2a1; /* Светло-коричневая рамка */
+  --button-color: #8e5b3a; /* Светлый коричневый (кнопки) */
+  --button-hover-color: #7a4e35; /* Темнее при наведении */
+  --link-color: #5b3a29;
+  --link-hover-color: #8e5b3a;
+  --font-family: Arial, sans-serif;
+}
+
+/* === Общие стили === */
+body {
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  font-family: var(--font-family);
+  line-height: 1.6; /* Улучшенная читаемость */
+}
+
+.container {
+  margin-top: 20px;
+}
+
+/* === Навигация === */
+.navbar {
+  background-color: var(--secondary-color);
+  padding: 0.5rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Легкая тень */
+}
+
+.navbar-brand {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.nav-link {
+  color: var(--link-color);
+}
+
+.nav-link:hover {
+  color: var(--link-hover-color);
+}
+
+/* === Кнопки === */
+.btn {
+  background-color: var(--button-color);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Небольшая тень */
+}
+
+.btn:hover {
+  background-color: var(--button-hover-color);
+}
+
+.btn-primary {
+  background-color: var(--button-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--button-hover-color);
+}
+
+/* === Карточки === */
+.card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out; /* Плавная анимация */
+}
+
+.card:hover {
+  transform: translateY(-3px); /* Небольшое поднятие при наведении */
+}
+
+.card-img-top {
+  width: 100%;
+  height: 200px;
+  object-fit: cover; /* Вариант: contain */
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-title {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.card-text {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+/* === Стили для карточек сборок (build-card) === */
+.build-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Важно для равной высоты карточек */
+}
+
+.build-card .card-body {
+    flex-grow: 1; /* Карточки заполняют доступное пространство */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Размещаем контент равномерно */
+}
+
+/* Кнопка "Подробнее" в карточке сборки */
+.build-card .btn {
+    align-self: flex-start;
+    margin-top: 1rem; /* Отступ сверху */
+}
+
+/* === Пагинация === */
+.pagination {
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.page-link {
+  color: var(--link-color);
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.page-item.active .page-link {
+  background-color: var(--button-color);
+  border-color: var(--button-color);
+  color: #fff;
+}
+
+.page-link:hover {
+  color: var(--link-hover-color);
+  background-color: #f2f2f2; /* Небольшое изменение при наведении */
+}
+
+.page-item.disabled .page-link {
+    color: #aaa;
+    background-color: #eee;
+    border-color: #ddd;
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+  .col-md-4 {
+    margin-bottom: 1rem; /* Дополнительный отступ на маленьких экранах */
+  }
+
+  .card-img-top {
+    height: 150px; /* Меньшая высота изображений на мобильных устройствах */
+  }
+}
+
+/* === Dropdown (из Bootstrap) === */
+.dropdown-menu {
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,.15);
+    box-shadow: 0 3px 6px rgba(0,0,0,.175);
+    padding: 0;
+    min-width: 10rem;
+}
+
+.dropdown-item {
+    color: #212529;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    display: block;
+    background-color: transparent;
+    border: 0;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+/* === Component Cards === */
+.cpu-card,
+.gpu-card,
+.motherboard-card,
+.ram-card,
+.storage-card,
+.psu-card,
+.case-card {
+    border: 1px solid #ccc;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: contain;
+    margin-bottom: 15px;
+}
+
+.card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-title {
+    margin-bottom: 0.5rem;
+}
+
+.card-text {
+    margin-bottom: 1rem;
+}
+
+/* === Loading Spinner Styles === */
+
+/* Основные стили спиннера (скрыт по умолчанию) */
+.db-app-loading {
+    display: none; /* Скрыт по умолчанию */
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #231f20;
+    font-family: sans-serif;
+    z-index: 1000;
+}
+
+/* Класс для отображения спиннера (добавляется JavaScript) */
+.db-app-loading.db-app-loading--visible {
+    display: flex;  /* Чтобы спиннер был видимым */
+}
+
+/* Gooey Spinner (опционально) */
+.gooey {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 142px;
+    height: 40px;
+    margin: -20px 0 0 -71px;
+    background: white;
+    filter: contrast(20);
+}
+
+.gooey .dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 12px;
+    left: 15px;
+    filter: blur(4px);
+    background: #000;
+    border-radius: 50%;
+    transform: translateX(0);
+    animation: dot 2.8s infinite;
+}
+
+.gooey .dots {
+    transform: translateX(0);
+    margin-top: 12px;
+    margin-left: 31px;
+    animation: dots 2.8s infinite;
+}
+
+.gooey .dots span {
+    display: block;
+    float: left;
+    width: 16px;
+    height: 16px;
+    margin-left: 16px;
+    filter: blur(4px);
+    background: #000;
+}
+
+@keyframes dot {
+    50% {
+        transform: translateX(96px);
+    }
+}
+
+@keyframes dots {
+    50% {
+        transform: translateX(-31px);
+    }
+}
+
+/* Spinner (Два кружка) */
+.db-loading-spinner {
+    display: inline-block;
+    line-height: 0;
+    width: 75px;
+    height: 75px;
+    position: relative;
+}
+
+.db-loading-spinner__double-bounce {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: #2160b5;
+    opacity: 0.5;
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: double-bounce 2.0s infinite ease-in-out;
+}
+
+.db-loading-spinner__double-bounce:last-child {
+    animation-delay: -1.0s;
+}
+
+@keyframes double-bounce {
+    0%, 100% {
+        transform: scale(0.0);
+    }
+    50% {
+        transform: scale(1.0);
+    }
+}
+
+/* === Flexbox для строки с карточками (если нужно) === */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -15px;  /* Компенсация отрицательного отступа Bootstrap */
+    margin-right: -15px; /* Компенсация отрицательного отступа Bootstrap */
+}
+
+.col-md-4 {
+    padding-left: 15px;   /* Возврат отступа для колонки */
+    padding-right: 15px;  /* Возврат отступа для колонки */
+    display: flex;      /* Добавлено для выравнивания высоты карточек */
+}
+
+/* static/css/styles.css */
+.animate-delay-01 { animation-delay: 0.1s; }
+.animate-delay-03 { animation-delay: 0.3s; }
+.animate-delay-05 { animation-delay: 0.5s; }
+.animate-delay-07 { animation-delay: 0.7s; }
+.animate-delay-09 { animation-delay: 0.9s; }
+
+
+/* Общие стили для карточки регистрации */
+.registration-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    background-color: #fff;
+    padding: 20px;  /* Добавим внутренний отступ */
+}
+
+/* Стили для заголовка */
+.registration-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+/* Стили для кнопки */
+.registration-button {
+    background-color: #28a745; /* Более яркий цвет кнопки */
+    border-color: #28a745;
+    color: white;
+    transition: background-color 0.3s ease;
+    border-radius: 5px;
+    padding: 0.75rem 1.5rem; /* Увеличим размер кнопки */
+    font-size: 1.1rem; /* Сделаем шрифт немного больше */
+    font-weight: bold; /* Сделаем шрифт жирным */
+}
+
+.registration-button:hover {
+    background-color: #218838; /* Более темный цвет при наведении */
+    border-color: #218838;
+}
+
+/* Стили для input полей */
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem; /* Увеличим размер полей ввода */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Стили для сообщений об ошибках */
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Стили для help text */
+.form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/*body {*/
+/*    background-color: #f0f2f5;*/
+/*}*/
+
+.highlight {
+    color: yellow;
+    background-color: rgba(255, 255, 0, 0.3);
+    font-weight: bold; /* Делает текст жирным, опционально */
+}

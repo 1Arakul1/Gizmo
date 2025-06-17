@@ -1,0 +1,40 @@
+<!-- games/templates/games/fps_form.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Предсказание FPS</h2>
+    <form method="post" action="{% url 'games:predict_fps' %}">
+        {% csrf_token %}
+        <label for="cpu">Процессор:</label>
+        <select name="cpu" id="cpu"> <!-- Убрали disabled -->
+            <option value="{{ cpu.pk }}">{{ cpu.manufacturer }} {{ cpu.model }}</option>
+        </select>
+        <!-- Убрали скрытое поле для cpu -->
+        <br>
+
+        <label for="gpu">Видеокарта:</label>
+        <select name="gpu" id="gpu"> <!-- Убрали disabled -->
+            <option value="{{ gpu.pk }}">{{ gpu.manufacturer }} {{ gpu.model }}</option>
+        </select>
+        <!-- Убрали скрытое поле для gpu -->
+        <br>
+
+        <label for="game">Игра:</label>
+        <select name="game" id="game">
+            {% for game in games %}
+                <option value="{{ game.pk }}">{{ game.title }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="settings">Настройки графики:</label>
+        <select name="settings" id="settings">
+            <option value="low">Низкие</option>
+            <option value="medium">Средние</option>
+            <option value="high">Высокие</option>
+            <option value="ultra">Ультра</option>
+        </select>
+        <br>
+
+        <button type="submit">Предсказать FPS</button>
+    </form>
+{% endblock %}

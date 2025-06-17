@@ -1,0 +1,93 @@
+[
+  {
+    "model": "components.case",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 17,
+      "model": "H510i",
+      "form_factor": "Mid-Tower",
+      "dimensions": "428mm x 210mm x 460mm",
+      "price": "100.00",
+      "image": null,
+      "supported_motherboard_form_factors": "ATX, Micro-ATX, Mini-ITX"
+    }
+  },
+  {
+    "model": "components.case",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 18,
+      "model": "Define R6",
+      "form_factor": "Mid-Tower",
+      "dimensions": "462mm x 233mm x 543mm",
+      "price": "150.00",
+      "image": null,
+      "supported_motherboard_form_factors": "ATX, Micro-ATX, Mini-ITX, E-ATX"
+    }
+  },
+ {
+    "model": "components.case",
+    "pk": 21,
+    "fields": {
+      "manufacturer": 21,
+      "model": "MasterBox TD500 Mesh",
+      "form_factor": "Mid-Tower",
+      "dimensions": "493mm x 210mm x 499mm",
+      "price": "90.00",
+      "image": null,
+      "supported_motherboard_form_factors": "ATX, Micro-ATX, Mini-ITX"
+    }
+  },
+  {
+    "model": "components.case",
+    "pk": 24,
+    "fields": {
+      "manufacturer": 24,
+      "model": "Meshify 2",
+      "form_factor": "Mid-Tower",
+      "dimensions": "542mm x 240mm x 474mm",
+      "price": "140.00",
+      "image": null,
+      "supported_motherboard_form_factors": "ATX, Micro-ATX, Mini-ITX, E-ATX"
+    }
+  },
+ {
+    "model": "components.case",
+    "pk": 29,
+    "fields": {
+      "manufacturer": 29,
+      "model": "HAF 700 EVO",
+      "form_factor": "Full-Tower",
+      "dimensions": "556mm x 279mm x 540mm",
+      "price": "450.00",
+      "image": null,
+      "supported_motherboard_form_factors": "E-ATX, ATX, Micro-ATX, Mini-ITX"
+    }
+  },
+  {
+    "model": "components.case",
+    "pk": 30,
+    "fields": {
+      "manufacturer": 30,
+      "model": "North",
+      "form_factor": "ATX",
+      "dimensions": "447mm x 215mm x 433mm",
+      "price": "130.00",
+      "image": null,
+      "supported_motherboard_form_factors": "ATX, Micro-ATX, Mini-ITX"
+    }
+  },
+  {
+    "model": "components.case",
+    "pk": 35,
+    "fields": {
+      "manufacturer": 35,
+      "model": "Meshify 2 XL",
+      "form_factor": "Full-Tower",
+      "dimensions": "542mm x 285mm x 566mm",
+      "price": "200.00",
+      "image": null,
+      "supported_motherboard_form_factors": "E-ATX, ATX, Micro-ATX, Mini-ITX"
+    }
+  }
+]

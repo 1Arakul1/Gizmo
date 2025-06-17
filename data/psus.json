@@ -1,0 +1,62 @@
+[
+  {
+    "model": "components.psu",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 19,
+      "model": "PRIME TX-1000",
+      "power": 1000,
+      "certification": "80+ Titanium",
+      "price": "350.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.psu",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 16,
+      "model": "HX1000 Platinum",
+      "power": 1000,
+      "certification": "80+ Platinum",
+      "price": "300.00",
+       "image": null
+    }
+  },
+  {
+    "model": "components.psu",
+    "pk": 22,
+    "fields": {
+      "manufacturer": 22,
+      "model": "Focus GX-750",
+      "power": 750,
+      "certification": "80+ Gold",
+      "price": "100.00",
+      "image": null
+    }
+  },
+    {
+    "model": "components.psu",
+    "pk": 25,
+    "fields": {
+      "manufacturer": 25,
+      "model": "SuperNOVA 750 G5",
+      "power": 750,
+      "certification": "80+ Gold",
+      "price": "90.00",
+      "image": null
+    }
+  },
+   {
+    "model": "components.psu",
+    "pk": 26,
+    "fields": {
+      "manufacturer": 26,
+      "model": "MWE Gold 650 - V2",
+      "power": 650,
+      "certification": "80+ Gold",
+      "price": "80.00",
+       "image": null
+    }
+  }
+]

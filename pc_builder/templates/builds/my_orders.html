@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Мои заказы</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Номер заказа</th>
+                    <th>Дата заказа</th>
+                    <th>Сумма</th>
+                    <th>Трек-номер</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.pk }}</td>
+                        <td>{{ order.order_date }}</td>
+                        <td>{{ order.total_amount }}</td>
+                        <td>{{ order.track_number }}</td>
+                        <td>{{ order.get_status_display }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

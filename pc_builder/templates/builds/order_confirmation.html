@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags != 'success' %}  {# Пропускаем сообщения с тегом 'success' #}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <h4 class="alert-heading">Заказ успешно оформлен!</h4>
+        <p>Спасибо за ваш заказ! Мы отправили подтверждение на вашу электронную почту.</p>
+        {% if track_number %}
+            <p>Ваш трек-номер: <strong>{{ track_number }}</strong></p>
+        {% endif %}
+        <hr>
+        <p class="mb-0">Мы свяжемся с вами в ближайшее время для уточнения деталей доставки.</p>
+        <a href="{% url 'index' %}" class="btn btn-primary">Вернуться на главную страницу</a>
+    </div>
+{% endblock %}

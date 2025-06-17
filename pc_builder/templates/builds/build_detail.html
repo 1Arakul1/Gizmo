@@ -1,0 +1,181 @@
+<!-- builds/templates/builds/build_detail.html -->
+ 
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <h2>Детали сборки: {{ build.name }}</h2>
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Компоненты</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- CPU -->
+        <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.cpu %}
+                    {% if build.cpu.image %}
+                        <img src="{{ build.cpu.image.url }}" class="card-img-top component-image" alt="{{ build.cpu.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.cpu.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Процессор</h5>
+                        <p class="card-text"><a href="{% url 'components:cpu_detail' build.cpu.pk %}">{{ build.cpu.manufacturer }} {{ build.cpu.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Процессор не выбран</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- GPU -->
+        <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.gpu %}
+                    {% if build.gpu.image %}
+                        <img src="{{ build.gpu.image.url }}" class="card-img-top component-image" alt="{{ build.gpu.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.gpu.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Видеокарта</h5>
+                        <p class="card-text"><a href="{% url 'components:gpu_detail' build.gpu.pk %}">{{ build.gpu.manufacturer }} {{ build.gpu.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Видеокарта не выбрана</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Motherboard -->
+        <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.motherboard %}
+                    {% if build.motherboard.image %}
+                        <img src="{{ build.motherboard.image.url }}" class="card-img-top component-image" alt="{{ build.motherboard.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.motherboard.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Материнская плата</h5>
+                        <p class="card-text"><a href="{% url 'components:motherboard_detail' build.motherboard.pk %}">{{ build.motherboard.manufacturer }} {{ build.motherboard.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Материнская плата не выбрана</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RAM -->
+         <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.ram %}
+                    {% if build.ram.image %}
+                        <img src="{{ build.ram.image.url }}" class="card-img-top component-image" alt="{{ build.ram.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.ram.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Оперативная память</h5>
+                        <p class="card-text"><a href="{% url 'components:ram_detail' build.ram.pk %}">{{ build.ram.manufacturer }} {{ build.ram.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Оперативная память не выбрана</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Storage -->
+        <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.storage %}
+                    {% if build.storage.image %}
+                        <img src="{{ build.storage.image.url }}" class="card-img-top component-image" alt="{{ build.storage.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.storage.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Накопитель</h5>
+                        <p class="card-text"><a href="{% url 'components:storage_detail' build.storage.pk %}">{{ build.storage.manufacturer }} {{ build.storage.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Накопитель не выбран</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- PSU -->
+        <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.psu %}
+                    {% if build.psu.image %}
+                        <img src="{{ build.psu.image.url }}" class="card-img-top component-image" alt="{{ build.psu.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.psu.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Блок питания</h5>
+                        <p class="card-text"><a href="{% url 'components:psu_detail' build.psu.pk %}">{{ build.psu.manufacturer }} {{ build.psu.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Блок питания не выбран</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Case -->
+        <div class="col-md-4">
+            <div class="card mb-3 component-card">
+                {% if build.case %}
+                    {% if build.case.image %}
+                        <img src="{{ build.case.image.url }}" class="card-img-top component-image" alt="{{ build.case.model }}" style="object-fit: contain;">
+                    {% else %}
+                        <img src="{{ build.case.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Корпус</h5>
+                        <p class="card-text"><a href="{% url 'components:case_detail' build.case.pk %}">{{ build.case.manufacturer }} {{ build.case.model }}</a></p>
+                    </div>
+                {% else %}
+                    <p>Корпус не выбран</p>
+                {% endif %}
+            </div>
+        </div>
+                <!-- Cooler -->
+    <div class="col-md-4">
+        <div class="card mb-3 component-card">
+            {% if build.cooler %}
+                {% if build.cooler.image %}
+                    <img src="{{ build.cooler.image.url }}" class="card-img-top component-image" alt="{{ build.cooler.model }}" style="object-fit: contain;">
+                {% else %}
+                    <img src="{{ build.cooler.image.url }}" class="card-img-top component-image" alt="No Image" style="object-fit: contain;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">Охлаждение</h5>
+                    <p class="card-text"><a href="{% url 'components:cooler_detail' build.cooler.pk %}">{{ build.cooler.manufacturer }} {{ build.cooler.model }}</a></p>
+                </div>
+            {% else %}
+                <p>Охлаждение не выбрано</p>
+            {% endif %}
+        </div>
+    </div>
+
+        
+    </div>
+
+    
+
+    <p>Общая стоимость: {{ build.total_price }}</p>
+
+    <a href="{% url 'builds:build_edit' build.pk %}" class="btn btn-warning mt-3">Редактировать сборку</a>  <!-- Добавлена кнопка -->
+    <a href="{% url 'games:predict_fps' %}?cpu={{ build.cpu.pk }}&gpu={{ build.gpu.pk }}" class="btn btn-primary mt-3">
+        Проверить, какие игры потянет эта сборка
+    </a>
+
+
+
+{% endblock %}

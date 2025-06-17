@@ -1,0 +1,118 @@
+<!-- builds/templates/builds/build_edit.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Редактирование сборки: {{ build.name }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <h3>Процессор</h3>
+        {% if build.cpu %}
+            <p>Текущий процессор: {{ build.cpu.manufacturer }} {{ build.cpu.model }}</p>
+        {% else %}
+            <p>Процессор не выбран</p>
+        {% endif %}
+        <select name="cpu">
+            <option value="">---------</option>
+            {% for cpu in cpus %}
+                <option value="{{ cpu.pk }}" {% if build.cpu == cpu %}selected{% endif %}>
+                    {{ cpu.manufacturer }} {{ cpu.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <h3>Видеокарта</h3>
+        {% if build.gpu %}
+            <p>Текущая видеокарта: {{ build.gpu.manufacturer }} {{ build.gpu.model }}</p>
+        {% else %}
+            <p>Видеокарта не выбрана</p>
+        {% endif %}
+        <select name="gpu">
+            <option value="">---------</option>
+            {% for gpu in gpus %}
+                <option value="{{ gpu.pk }}" {% if build.gpu == gpu %}selected{% endif %}>
+                    {{ gpu.manufacturer }} {{ gpu.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <h3>Материнская плата</h3>
+        {% if build.motherboard %}
+            <p>Текущая материнская плата: {{ build.motherboard.manufacturer }} {{ build.motherboard.model }}</p>
+        {% else %}
+            <p>Материнская плата не выбрана</p>
+        {% endif %}
+        <select name="motherboard">
+            <option value="">---------</option>
+            {% for motherboard in motherboards %}
+                <option value="{{ motherboard.pk }}" {% if build.motherboard == motherboard %}selected{% endif %}>
+                    {{ motherboard.manufacturer }} {{ motherboard.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <h3>Оперативная память</h3>
+        {% if build.ram %}
+            <p>Текущая оперативная память: {{ build.ram.manufacturer }} {{ build.ram.model }}</p>
+        {% else %}
+            <p>Оперативная память не выбрана</p>
+        {% endif %}
+        <select name="ram">
+            <option value="">---------</option>
+            {% for ram in rams %}
+                <option value="{{ ram.pk }}" {% if build.ram == ram %}selected{% endif %}>
+                    {{ ram.manufacturer }} {{ ram.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <h3>Накопитель</h3>
+        {% if build.storage %}
+            <p>Текущий накопитель: {{ build.storage.manufacturer }} {{ build.storage.model }}</p>
+        {% else %}
+            <p>Накопитель не выбран</p>
+        {% endif %}
+        <select name="storage">
+            <option value="">---------</option>
+            {% for storage in storages %}
+                <option value="{{ storage.pk }}" {% if build.storage == storage %}selected{% endif %}>
+                    {{ storage.manufacturer }} {{ storage.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <h3>Блок питания</h3>
+        {% if build.psu %}
+            <p>Текущий блок питания: {{ build.psu.manufacturer }} {{ build.psu.model }}</p>
+        {% else %}
+            <p>Блок питания не выбран</p>
+        {% endif %}
+        <select name="psu">
+            <option value="">---------</option>
+            {% for psu in psus %}
+                <option value="{{ psu.pk }}" {% if build.psu == psu %}selected{% endif %}>
+                    {{ psu.manufacturer }} {{ psu.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <h3>Корпус</h3>
+        {% if build.case %}
+            <p>Текущий корпус: {{ build.case.manufacturer }} {{ build.case.model }}</p>
+        {% else %}
+            <p>Корпус не выбран</p>
+        {% endif %}
+        <select name="case">
+            <option value="">---------</option>
+            {% for case in cases %}
+                <option value="{{ case.pk }}" {% if build.case == case %}selected{% endif %}>
+                    {{ case.manufacturer }} {{ case.model }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a href="{% url 'builds:build_detail' build.pk %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

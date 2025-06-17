@@ -1,0 +1,15 @@
+<!-- games/templates/games/game_list.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Список игр</h2>
+    <ul>
+        {% for game in games %}
+            <li>
+                <a href="{% url 'games:game_detail' game.pk %}">
+                    {{ game.title }} ({{ game.genre }})
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

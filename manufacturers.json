@@ -1,0 +1,291 @@
+[
+  {
+    "model": "components.manufacturer",
+    "pk": 1,
+    "fields": {
+      "name": "Intel",
+      "component_type": "cpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 2,
+    "fields": {
+      "name": "AMD",
+      "component_type": "cpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 3,
+    "fields": {
+      "name": "NVIDIA",
+      "component_type": "gpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 4,
+    "fields": {
+      "name": "ASUS",
+      "component_type": "gpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 5,
+    "fields": {
+      "name": "MSI",
+      "component_type": "gpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 6,
+    "fields": {
+      "name": "Gigabyte",
+      "component_type": "motherboard"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 7,
+    "fields": {
+      "name": "ASRock",
+      "component_type": "motherboard"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 8,
+    "fields": {
+      "name": "Corsair",
+      "component_type": "ram"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 9,
+    "fields": {
+      "name": "G.Skill",
+      "component_type": "ram"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 10,
+    "fields": {
+      "name": "Crucial",
+      "component_type": "storage"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 11,
+    "fields": {
+      "name": "Kingston",
+      "component_type": "ram"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 12,
+    "fields": {
+      "name": "Samsung",
+      "component_type": "storage"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 13,
+    "fields": {
+      "name": "Western Digital",
+      "component_type": "storage"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 14,
+    "fields": {
+      "name": "Seagate",
+      "component_type": "storage"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 15,
+    "fields": {
+      "name": "EVGA",
+      "component_type": "psu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 16,
+    "fields": {
+      "name": "Cooler Master",
+      "component_type": "psu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 17,
+    "fields": {
+      "name": "NZXT",
+      "component_type": "case"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 18,
+    "fields": {
+      "name": "Fractal Design",
+      "component_type": "case"
+    }
+  },
+    {
+    "model": "components.manufacturer",
+    "pk": 19,
+    "fields": {
+      "name": "Seasonic",
+      "component_type": "psu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 20,
+    "fields": {
+      "name": "G.Skill",
+      "component_type": "ram"
+    }
+  },
+      {
+    "model": "components.manufacturer",
+    "pk": 21,
+    "fields": {
+      "name": "Cooler Master",
+      "component_type": "case"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 22,
+    "fields": {
+      "name": "Seasonic",
+      "component_type": "psu"
+    }
+  },
+      {
+    "model": "components.manufacturer",
+    "pk": 23,
+    "fields": {
+      "name": "Western Digital",
+      "component_type": "storage"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 24,
+    "fields": {
+      "name": "Fractal Design",
+      "component_type": "case"
+    }
+  },
+    {
+    "model": "components.manufacturer",
+    "pk": 25,
+    "fields": {
+      "name": "EVGA",
+      "component_type": "psu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 26,
+    "fields": {
+      "name": "Cooler Master",
+      "component_type": "psu"
+    }
+  },
+    {
+    "model": "components.manufacturer",
+    "pk": 27,
+    "fields": {
+      "name": "ASUS",
+      "component_type": "gpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 28,
+    "fields": {
+      "name": "MSI",
+      "component_type": "gpu"
+    }
+  },
+      {
+    "model": "components.manufacturer",
+    "pk": 29,
+    "fields": {
+      "name": "Cooler Master",
+      "component_type": "case"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 30,
+    "fields": {
+      "name": "Fractal Design",
+      "component_type": "case"
+    }
+  },
+      {
+    "model": "components.manufacturer",
+    "pk": 31,
+    "fields": {
+      "name": "Corsair",
+      "component_type": "ram"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 32,
+    "fields": {
+      "name": "G.Skill",
+      "component_type": "ram"
+    }
+  },
+   {
+    "model": "components.manufacturer",
+    "pk": 33,
+    "fields": {
+      "name": "Crucial",
+      "component_type": "storage"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 34,
+    "fields": {
+      "name": "Seagate",
+      "component_type": "storage"
+    }
+  },
+   {
+    "model": "components.manufacturer",
+    "pk": 35,
+    "fields": {
+      "name": "Fractal Design",
+      "component_type": "case"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 36,
+    "fields": {
+      "name": "Seasonic",
+      "component_type": "psu"
+    }
+  }
+
+]

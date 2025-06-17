@@ -1,0 +1,47 @@
+[
+  {
+    "model": "components.storage",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 12,
+      "model": "990 Pro 2TB",
+      "capacity": 2000,
+      "type": "SSD",
+      "interface": "NVMe PCIe 4.0",
+      "read_speed": 7450,
+      "write_speed": 6900,
+      "price": "180.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.storage",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 13,
+      "model": "Black SN850X 2TB",
+      "capacity": 2000,
+      "type": "SSD",
+      "interface": "NVMe PCIe 4.0",
+      "read_speed": 7300,
+      "write_speed": 6600,
+      "price": "170.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.storage",
+    "pk": 3,
+    "fields": {
+      "manufacturer": 14,
+      "model": "Barracuda 2TB",
+      "capacity": 2000,
+      "type": "HDD",
+      "interface": "SATA III",
+      "read_speed": 210,
+      "write_speed": 210,
+      "price": "60.00",
+      "image": null
+    }
+  }
+]

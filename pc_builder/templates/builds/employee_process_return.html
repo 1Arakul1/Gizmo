@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Обработка запроса на возврат #{{ return_request.pk }}</h2>
+        <p>Пользователь: {{ return_request.user.username }}</p>
+        <p>Товар: {{ return_request.order_item.item }}</p>
+        <p>Причина возврата: {{ return_request.reason }}</p>
+        <p>Дата запроса: {{ return_request.request_date }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="status" class="form-label">Статус:</label>
+                <select class="form-select" id="status" name="status">
+                    {% for choice in status_choices %}
+                        <option value="{{ choice.0 }}" {% if return_request.status == choice.0 %}selected{% endif %}>
+                            {{ choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="comment" class="form-label">Комментарий:</label>
+                <textarea class="form-control" id="comment" name="comment" rows="3">{{ return_request.comment|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'builds:employee_return_requests' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+{% endblock %}

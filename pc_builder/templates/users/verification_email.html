@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Подтверждение адреса электронной почты</title>
+</head>
+<body>
+    <p>Здравствуйте, {{ user.username }}!</p>
+
+    <p>Спасибо за регистрацию на нашем сайте. Пожалуйста, <a href="{{ verification_link }}">перейдите по ссылке</a>, чтобы подтвердить свой адрес электронной почты:</p>
+
+    <p>
+        <a href="{{ verification_link }}">{{ verification_link }}</a>
+    </p>
+
+    <p>С уважением,<br>Команда сайта</p>
+</body>
+</html>

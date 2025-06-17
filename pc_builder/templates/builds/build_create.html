@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Создать новую сборку</h2>
+
+        {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <p>Пожалуйста, исправьте ошибки:</p>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" class="form-group">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="cpu" class="form-label">Процессор:</label>
+                <select name="cpu" id="cpu" class="form-select">
+                    <option value="">---------</option>
+                    {% for cpu in cpus %}
+                        <option value="{{ cpu.pk }}" {% if request.POST.cpu|safe|default:""|add:"0" == cpu.pk|stringformat:"s" %}selected{% endif %}>{{ cpu.manufacturer }} {{ cpu.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="gpu" class="form-label">Видеокарта:</label>
+                <select name="gpu" id="gpu" class="form-select">
+                    <option value="">---------</option>
+                    {% for gpu in gpus %}
+                        <option value="{{ gpu.pk }}" {% if request.POST.gpu|safe|default:""|add:"0" == gpu.pk|stringformat:"s" %}selected{% endif %}>{{ gpu.manufacturer }} {{ gpu.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="motherboard" class="form-label">Материнская плата:</label>
+                <select name="motherboard" id="motherboard" class="form-select">
+                    <option value="">---------</option>
+                    {% for motherboard in motherboards %}
+                        <option value="{{ motherboard.pk }}" {% if request.POST.motherboard|safe|default:""|add:"0" == motherboard.pk|stringformat:"s" %}selected{% endif %}>{{ motherboard.manufacturer }} {{ motherboard.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="ram" class="form-label">Оперативная память:</label>
+                <select name="ram" id="ram" class="form-select">
+                    <option value="">---------</option>
+                    {% for ram in rams %}
+                        <option value="{{ ram.pk }}" {% if request.POST.ram|safe|default:""|add:"0" == ram.pk|stringformat:"s" %}selected{% endif %}>{{ ram.manufacturer }} {{ ram.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="storage" class="form-label">Накопитель:</label>
+                <select name="storage" id="storage" class="form-select">
+                    <option value="">---------</option>
+                    {% for storage in storages %}
+                        <option value="{{ storage.pk }}" {% if request.POST.storage|safe|default:""|add:"0" == storage.pk|stringformat:"s" %}selected{% endif %}>{{ storage.manufacturer }} {{ storage.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="psu" class="form-label">Блок питания:</label>
+                <select name="psu" id="psu" class="form-select">
+                    <option value="">---------</option>
+                    {% for psu in psus %}
+                        <option value="{{ psu.pk }}" {% if request.POST.psu|safe|default:""|add:"0" == psu.pk|stringformat:"s" %}selected{% endif %}>{{ psu.manufacturer }} {{ psu.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="case" class="form-label">Корпус:</label>
+                <select name="case" id="case" class="form-select">
+                    <option value="">---------</option>
+                                        {% for case in cases %}
+                        <option value="{{ case.pk }}" {% if request.POST.case|safe|default:""|add:"0" == case.pk|stringformat:"s" %}selected{% endif %}>{{ case.manufacturer }} {{ case.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="cooler" class="form-label">Охлаждение:</label>
+                <select name="cooler" id="cooler" class="form-select">
+                    <option value="">---------</option>
+                    {% for cooler in coolers %}
+                        <option value="{{ cooler.pk }}" {% if request.POST.cooler|safe|default:""|add:"0" == cooler.pk|stringformat:"s" %}selected{% endif %}>{{ cooler.manufacturer }} {{ cooler.model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </form>
+    </div>
+{% endblock %}
+

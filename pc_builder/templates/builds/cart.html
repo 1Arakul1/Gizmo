@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    {% load cache %}
+    <h2 class="mb-4 text-primary">Корзина</h2>
+
+    {% if cart_items %}
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-striped table-hover table-bordered align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Товар</th>
+                            <th class="text-center">Количество</th>
+                            <th class="text-end">Цена, ₽</th>
+                            <th class="text-center">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                            <tr>
+                                <td>
+                                    {% if item.build %}
+                                        <strong>Сборка #{{ item.build.pk }}</strong>
+                                    {% elif item.cpu %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.cpu.image %}
+                                                <img src="{{ item.cpu.image.url }}" alt="{{ item.cpu.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Процессор:</span><br>
+                                                <a href="{% url 'components:cpu_detail' item.cpu.pk %}">{{ item.cpu.manufacturer }} {{ item.cpu.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.gpu %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.gpu.image %}
+                                                <img src="{{ item.gpu.image.url }}" alt="{{ item.gpu.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Видеокарта:</span><br>
+                                                <a href="{% url 'components:gpu_detail' item.gpu.pk %}">{{ item.gpu.manufacturer }} {{ item.gpu.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.motherboard %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.motherboard.image %}
+                                                <img src="{{ item.motherboard.image.url }}" alt="{{ item.motherboard.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Материнская плата:</span><br>
+                                                <a href="{% url 'components:motherboard_detail' item.motherboard.pk %}">{{ item.motherboard.manufacturer }} {{ item.motherboard.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.ram %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.ram.image %}
+                                                <img src="{{ item.ram.image.url }}"  alt="{{ item.ram.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Оперативная память:</span><br>
+                                                <a href="{% url 'components:ram_detail' item.ram.pk %}">{{ item.ram.manufacturer }} {{ item.ram.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.storage %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.storage.image %}
+                                                <img src="{{ item.storage.image.url }}" alt="{{ item.storage.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Накопитель:</span><br>
+                                                <a href="{% url 'components:storage_detail' item.storage.pk %}">{{ item.storage.manufacturer }} {{ item.storage.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.psu %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.psu.image %}
+                                                <img src="{{ item.psu.image.url }}" alt="{{ item.psu.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Блок питания:</span><br>
+                                                <a href="{% url 'components:psu_detail' item.psu.pk %}">{{ item.psu.manufacturer }} {{ item.psu.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.case %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.case.image %}
+                                                <img src="{{ item.case.image.url }}" alt="{{ item.case.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Корпус:</span><br>
+                                                <a href="{% url 'components:case_detail' item.case.pk %}">{{ item.case.manufacturer }} {{ item.case.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% elif item.cooler %}
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.cooler.image %}
+                                                <img src="{{ item.cooler.image.url }}" alt="{{ item.cooler.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-semibold">Кулер:</span><br>
+                                                <a href="{% url 'components:cooler_detail' item.cooler.pk %}">{{ item.cooler.manufacturer }} {{ item.cooler.model }}</a>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <em>Неизвестный товар</em>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center align-middle">{{ item.quantity }}</td>
+                                <td class="text-end align-middle">
+                                    {% if item.build %}
+                                        {{ item.build.total_price|floatformat:2 }}
+                                    {% elif item.cpu %}
+                                        {{ item.cpu.price|floatformat:2 }}
+                                    {% elif item.gpu %}
+                                        {{ item.gpu.price|floatformat:2 }}
+                                    {% elif item.motherboard %}
+                                        {{ item.motherboard.price|floatformat:2 }}
+                                    {% elif item.ram %}
+                                        {{ item.ram.price|floatformat:2 }}
+                                    {% elif item.storage %}
+                                        {{ item.storage.price|floatformat:2 }}
+                                    {% elif item.psu %}
+                                        {{ item.psu.price|floatformat:2 }}
+                                    {% elif item.case %}
+                                        {{ item.case.price|floatformat:2 }}
+                                    {% elif item.cooler %}
+                                        {{ item.cooler.price|floatformat:2 }}
+                                    {% else %}
+                                        0.00
+                                    {% endif %}
+                                    ₽
+                                </td>
+                                <td class="text-center align-middle">
+                                    <a href="{% url 'builds:remove_from_cart' item.pk %}" class="btn btn-outline-danger btn-sm" title="Удалить из корзины">
+                                        <i class="bi bi-trash"></i> Удалить
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12 d-flex justify-content-end align-items-center gap-3">
+                <h5 class="mb-0">Общая стоимость: <span class="text-success fw-bold">{{ total_price|floatformat:2 }} ₽</span></h5>
+                <a href="{% url 'builds:checkout' %}" class="btn btn-success btn-lg shadow-sm">
+                    Оформить заказ <i class="bi bi-cart-check-fill"></i>
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center mt-5" role="alert">
+            Ваша корзина пуста.
+        </div>
+    {% endif %}
+{% endblock %}

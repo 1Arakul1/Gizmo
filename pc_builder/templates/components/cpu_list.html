@@ -1,0 +1,147 @@
+<!-- components/templates/components/cpu_list.html -->
+<!-- components/templates/components/cpu_list.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h2 class="animate__animated animate__fadeIn">Список процессоров</h2>
+
+<form method="get" class="mb-4 animate__animated animate__fadeIn">
+    <div class="input-group">
+        <input type="text" class="form-control" placeholder="Поиск процессора..." name="q" value="{{ query|default:'' }}">
+        <button class="btn btn-outline-secondary" type="submit">Поиск</button>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for cpu in cpus %}
+    <div class="col animate__animated animate__zoomIn animate-delay-01">
+        <div class="card h-100 cpu-card">
+            {% if cpu.image %}
+            <img src="{{ cpu.image.url }}" class="card-img-top cpu-image animate__animated animate__fadeIn animate-delay-03" alt="{{ cpu.model }}">
+            {% else %}
+            <img src="{{ cpu.image.url }}" class="card-img-top cpu-image animate__animated animate__fadeIn animate-delay-03" alt="No Image">
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title animate__animated animate__bounceIn animate-delay-05">{{ cpu.manufacturer }} {{ cpu.model }}</h5>
+                <p class="card-text mb-4 animate__animated animate__fadeIn animate-delay-07">
+                    <strong>Частота:</strong> {{ cpu.frequency }} GHz<br>
+                    <strong>Ядер:</strong> {{ cpu.cores }}<br>
+                    <strong>Цена:</strong> {{ cpu.price }} ₽
+                </p>
+                <a href="{% url 'components:cpu_detail' cpu.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
+                <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form" data-cpu-id="{{ cpu.pk }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="component_type" value="cpu">
+                    <input type="hidden" name="component_id" value="{{ cpu.pk }}">
+                    <div class="form-group mb-2">
+                        <label for="quantity-{{ cpu.pk }}">Количество:</label>
+                        <input type="number" class="form-control" id="quantity-{{ cpu.pk }}" name="quantity" value="1"
+                            min="1">
+                    </div>
+                    <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11">Добавить в корзину</button>
+                </form>
+
+                <div class="added-message text-success mt-2 animate__animated animate__fadeIn animate-delay-13" id="added-message-{{ cpu.pk }}"
+                    style="display: none; font-weight: 600;">
+                    Товар в корзине
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>Процессоры не найдены.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if cpus.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4 animate__animated animate__fadeIn">
+    <ul class="pagination justify-content-center">
+        {% if cpus.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?q={{ query }}&page={{ cpus.previous_page_number }}" aria-label="Предыдущая">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&laquo;</span>
+        </li>
+        {% endif %}
+
+        {% for num in cpus.paginator.page_range %}
+        {% if cpus.number == num %}
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+
+        {% if cpus.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?q={{ query }}&page={{ cpus.next_page_number }}" aria-label="Следующая">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&raquo;</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const forms = document.querySelectorAll('.add-to-cart-form');
+
+        forms.forEach(form => {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const cpuId = form.dataset.cpuId;
+                const messageElem = document.getElementById('added-message-' + cpuId);
+
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: formData,
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Ошибка сети');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            messageElem.style.display = 'block';
+                            setTimeout(() => {
+                                messageElem.style.display = 'none';
+                            }, 3000);
+                        } else {
+                            alert(data.error || 'Не удалось добавить товар');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Ошибка при добавлении товара в корзину');
+                        console.error(error);
+                    });
+            });
+        });
+    });
+</script>
+
+{% endblock %}
+
+

@@ -1,0 +1,11 @@
+<!-- games/templates/games/fps_result.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Предсказание FPS</h2>
+    <p>Игра: {{ game.title }}</p>
+    <p>Процессор: {{ cpu.manufacturer }} {{ cpu.model }}</p>
+    <p>Видеокарта: {{ gpu.manufacturer }} {{ gpu.model }}</p>
+    <p>Настройки графики: {{ settings }}</p>
+    <p>Предполагаемый FPS: {{ predicted_fps }}</p>
+{% endblock %}

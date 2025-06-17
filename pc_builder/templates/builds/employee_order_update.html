@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Изменение статуса заказа #{{ order.pk }}</h2>
+        <p>Тип доставки: {{ order.get_delivery_option_display }}</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}  <!--  Вот здесь!  -->
+            <button type="submit" class="btn btn-success">Сохранить</button>
+            <a href="{% url 'builds:employee_order_list' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+{% endblock %}

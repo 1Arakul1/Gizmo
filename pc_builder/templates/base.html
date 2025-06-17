@@ -1,0 +1,163 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>PC Builder</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <!-- Ваш пользовательский CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+    <!-- Загрузка -->
+    <div id="loading-overlay" class="db-app-loading" style="display:none;">
+        <div class="db-loading-spinner">
+            <div class="db-loading-spinner__double-bounce"></div>
+            <div class="db-loading-spinner__double-bounce"></div>
+        </div>
+    </div>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="/">Главная</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                    aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-th-list"></i> Каталог
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                <li><a class="dropdown-item" href="{% url 'components:cpu_list' %}"><i class="fas fa-microchip"></i> Процессоры</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:gpu_list' %}"><i class="fas fa-video"></i> Видеокарты</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:motherboard_list' %}"><i class="fas fa-laptop"></i> Материнские платы</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:ram_list' %}"><i class="fas fa-memory"></i> Оперативная память</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:storage_list' %}"><i class="fas fa-hdd"></i> Накопители</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:psu_list' %}"><i class="fas fa-plug"></i> Блоки питания</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:case_list' %}"><i class="fas fa-box"></i> Корпуса</a></li>
+                                <li><a class="dropdown-item" href="{% url 'components:cooler_list' %}"><i class="fas fa-fan"></i> Охлаждение</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'builds:build_list' %}"><i class="fas fa-cogs"></i> Сборки</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <span class="nav-link"><i class="fas fa-user"></i> Привет, {{ user.username }}</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:profile' %}"><i class="fas fa-user-circle"></i> Профиль</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:logout' %}"><i class="fas fa-sign-out-alt"></i> Выйти</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:login' %}"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'users:register' %}"><i class="fas fa-user-plus"></i> Зарегистрироваться</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'builds:cart' %}">
+                                <i class="fas fa-shopping-cart"></i> Корзина
+                                {% if cart_items %}
+                                    <span class="badge bg-light text-dark position-absolute top-0 start-100 translate-middle rounded-pill">
+                                        {{ cart_items|length }}
+                                        <span class="visually-hidden">товаров в корзине</span>
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <hr />
+
+    <main class="container my-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Скрипты Bootstrap 5 и Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.classList.remove('db-app-loading--visible');
+            }
+        });
+
+        function showLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                overlay.classList.add('db-app-loading--visible');
+            }
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.classList.remove('db-app-loading--visible');
+                    overlay.style.display = 'none';
+                }
+            }, 1000);
+        }
+    </script>
+
+    <script>
+        (function() {
+          'use strict';
+          window.addEventListener('load', function() {
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+              form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+          }, false);
+        })();
+    </script>
+
+    <!-- Блок для кастомных скриптов из дочерних шаблонов -->
+    {% block javascript %}{% endblock %}
+</body>
+</html>

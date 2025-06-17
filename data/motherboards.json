@@ -1,0 +1,87 @@
+[
+  {
+    "model": "components.motherboard",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 6,
+      "model": "Z790 AORUS Elite AX",
+      "form_factor": "ATX",
+      "socket": "LGA 1700",
+      "chipset": "Z790",
+      "ram_slots": 4,
+      "ram_type": "DDR5",
+      "max_ram_frequency": 7600,
+      "expansion_slots": "PCIe 5.0 x16, PCIe 4.0 x16, PCIe 3.0 x1",
+      "price": "400.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.motherboard",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 7,
+      "model": "X670E Taichi",
+      "form_factor": "ATX",
+      "socket": "AM5",
+      "chipset": "X670E",
+      "ram_slots": 4,
+      "ram_type": "DDR5",
+      "max_ram_frequency": 6600,
+      "expansion_slots": "PCIe 5.0 x16, PCIe 4.0 x16, PCIe 3.0 x1",
+      "price": "500.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.motherboard",
+    "pk": 3,
+    "fields": {
+      "manufacturer": 6,
+      "model": "B660M DS3H DDR4",
+      "form_factor": "Micro-ATX",
+      "socket": "LGA 1700",
+      "chipset": "B660",
+      "ram_slots": 4,
+      "ram_type": "DDR4",
+      "max_ram_frequency": 3200,
+      "expansion_slots": "PCIe 4.0 x16, PCIe 3.0 x1",
+      "price": "120.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.motherboard",
+    "pk": 4,
+    "fields": {
+      "manufacturer": 7,
+      "model": "B450M Steel Legend",
+      "form_factor": "Micro-ATX",
+      "socket": "AM4",
+      "chipset": "B450",
+      "ram_slots": 4,
+      "ram_type": "DDR4",
+      "max_ram_frequency": 3200,
+      "expansion_slots": "PCIe 3.0 x16, PCIe 2.0 x1",
+      "price": "80.00",
+      "image": null
+    }
+  },
+    {
+    "model": "components.motherboard",
+    "pk": 5,
+    "fields": {
+      "manufacturer": 6,
+      "model": "H410M S2H V3",
+      "form_factor": "Micro-ATX",
+      "socket": "LGA 1200",
+      "chipset": "H410",
+      "ram_slots": 2,
+      "ram_type": "DDR4",
+      "max_ram_frequency": 2933,
+      "expansion_slots": "PCIe 3.0 x16, PCIe 3.0 x1",
+      "price": "70.00",
+      "image": null
+    }
+  }
+]

@@ -1,0 +1,16 @@
+<!-- games/templates/games/game_detail.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>{{ game.title }}</h2>
+    <p>Жанр: {{ game.genre }}</p>
+    <h3>Минимальные требования:</h3>
+    <p>CPU: {{ game.min_cpu }}</p>
+    <p>GPU: {{ game.min_gpu }}</p>
+    <p>RAM: {{ game.min_ram }} GB</p>
+    <h3>Рекомендуемые требования:</h3>
+    <p>CPU: {{ game.recommended_cpu }}</p>
+    <p>GPU: {{ game.recommended_gpu }}</p>
+    <p>RAM: {{ game.recommended_ram }} GB</p>
+    <a href="{% url 'games:predict_fps' %}">Проверить FPS на своей сборке</a>
+{% endblock %}

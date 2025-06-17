@@ -1,0 +1,54 @@
+[
+  {
+    "model": "components.ram",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 8,
+      "model": "Vengeance DDR5-6000",
+      "capacity": 32,
+      "frequency": 6000,
+      "type": "DDR5",
+      "price": "200.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.ram",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 9,
+      "model": "Trident Z5 Neo DDR5-6000",
+      "capacity": 32,
+      "frequency": 6000,
+      "type": "DDR5",
+      "price": "250.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.ram",
+    "pk": 3,
+    "fields": {
+      "manufacturer": 11,
+      "model": "Fury Beast DDR4-3200",
+      "capacity": 16,
+      "frequency": 3200,
+      "type": "DDR4",
+      "price": "60.00",
+      "image": null
+    }
+  },
+    {
+    "model": "components.ram",
+    "pk": 4,
+    "fields": {
+      "manufacturer": 8,
+      "model": "Vengeance LPX DDR4-3200",
+      "capacity": 16,
+      "frequency": 3200,
+      "type": "DDR4",
+      "price": "55.00",
+      "image": null
+    }
+  }
+]
