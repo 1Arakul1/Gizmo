@@ -35,7 +35,7 @@ load_dotenv()
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
 DEBUG = True
   # В production должно быть False
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '178.206.251.227']  # Замени на свой IP
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '178.207.184.17']  # Замени на свой IP
 
 # Application definition
 # settings.py
@@ -222,7 +222,7 @@ LOGGING = {
 # Настройки кэширования (дополнительно)
 CACHE_ENABLED = True  # Читаем из .env
 CACHE_MIDDLEWARE_ALIAS = "default"  # Используем кэш по умолчанию
-CACHE_MIDDLEWARE_SECONDS = 0  # Кэшировать на 15 минут (в секундах)
+CACHE_MIDDLEWARE_SECONDS = 10  # Кэшировать на 15 минут (в секундах)
 CACHE_MIDDLEWARE_KEY_PREFIX = ""  # Префикс для ключей кэша # Префикс для ключей кэшаючей кэша
 
 #!/usr/bin/env python

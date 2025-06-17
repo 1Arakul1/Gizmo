@@ -524,9 +524,6 @@ def build_edit(request, pk):
         }
         return render(request, 'builds/build_edit.html', context)
 
-# Функция для проверки, является ли пользователь сотрудником
-def is_employee(user):
-    return user.is_staff  # Проверка, является ли пользователь сотрудником (is_staff)
 
 # Форма
 class CustomOrderUpdateForm(OrderUpdateForm):
@@ -534,6 +531,8 @@ class CustomOrderUpdateForm(OrderUpdateForm):
         status_choices = kwargs.pop('status_choices', [])
         super().__init__(*args, **kwargs)
         self.fields['status'].choices = status_choices  # Задаём в конструкторе
+
+
 
 
 @login_required
@@ -644,7 +643,7 @@ def employee_order_complete(request, order_id):
 
     logger.info(f"Order {order.pk} status after update: {order.status}, is_completed: {order.is_completed}")
 
-    cache.delete('employee_order_list')
+    
     messages.success(request, f"Заказ #{order.pk} отмечен как выданный.")
     return redirect('builds:employee_order_list')
 
