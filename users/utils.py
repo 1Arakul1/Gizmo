@@ -1,6 +1,33 @@
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
+# users/utils.py
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_order_status_email(order):
+    """Отправляет email уведомление об изменении статуса заказа."""
+    try:
+        if order.status == 'delivered':
+            subject = f"Ваш заказ #{order.pk} доставлен и ожидает вас!"
+            message = f"Здравствуйте, {order.user.username}!\n\nВаш заказ #{order.pk} доставлен и ожидает вас по адресу самовывоза. Пожалуйста, заберите его в удобное для вас время.\n\nСпасибо за ваш заказ!"
+        elif order.status == 'delivering':
+            subject = f"Ваш заказ #{order.pk} будет доставлен в течение 3 часов!"
+            message = f"Здравствуйте, {order.user.username}!\n\nВаш заказ #{order.pk} находится в процессе доставки и будет доставлен вам в течение 3 часов.\n\nСпасибо за ваш заказ!"
+        else:
+            subject = f"Обновление статуса заказа #{order.pk}"
+            message = f"Здравствуйте, {order.user.username}!\n\nСтатус вашего заказа #{order.pk} был изменен на: {order.get_status_display()}.\n\nСпасибо за ваш заказ!"
+
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,  # Отправитель (укажите в settings.py)
+            [order.email],  # Получатель (email из заказа)
+            fail_silently=False,
+        )
+        print(f"DEBUG: Email sent to {order.email} for order #{order.pk}, status: {order.status}")  # Логгируем отправку
+    except Exception as e:
+        print(f"DEBUG: Error sending email to {order.email} for order #{order.pk}: {e}")  # Логгируем ошибку
 
 def send_registration_email(user):
     """Отправляет письмо с информацией о регистрации."""

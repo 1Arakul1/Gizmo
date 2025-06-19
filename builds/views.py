@@ -1,3 +1,4 @@
+#builds\views.py
 from decimal import Decimal
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
@@ -30,6 +31,7 @@ from django.db import models # Импортируем models
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from users.utils import send_order_status_email 
 
 def employee_check(user):
     """Проверяет, является ли пользователь сотрудником (имеет ли права персонала)."""
@@ -572,7 +574,10 @@ def employee_order_list(request):
 @login_required
 @user_passes_test(is_employee)
 def employee_order_update(request, order_id):
-    order = get_object_or_404(Order, pk=order_id)
+    try:
+        order = Order.objects.get(pk=order_id)
+    except Order.DoesNotExist:
+        raise Http404("Order not found")
 
     # Определение доступных статусов на основе доставки
     if order.delivery_option == 'courier':  # Должно быть 'courier'
@@ -596,29 +601,12 @@ def employee_order_update(request, order_id):
         form = CustomOrderUpdateForm(request.POST, instance=order, status_choices=status_choices)
         if form.is_valid():
             old_status = order.status  # Сохраняем старый статус для сравнения
-            form.save() # Сохраняем изменения в заказе
+            form.save()  # Сохраняем изменения в заказе
             new_status = order.status
-            # Отправка email уведомления
+
+            # Отправка email уведомления, если статус изменился
             if new_status in ['delivered', 'delivering'] and old_status != new_status:
-                # Определяем текст сообщения в зависимости от статуса
-                if new_status == 'delivered':
-                    subject = f"Ваш заказ #{order.pk} доставлен и ожидает вас!"
-                    message = f"Здравствуйте, {order.user.username}!\n\nВаш заказ #{order.pk} доставлен и ожидает вас по адресу самовывоза. Пожалуйста, заберите его в удобное для вас время.\n\nСпасибо за ваш заказ!"
-                elif new_status == 'delivering':
-                    subject = f"Ваш заказ #{order.pk} будет доставлен в течение 3 часов!"
-                    message = f"Здравствуйте, {order.user.username}!\n\nВаш заказ #{order.pk} находится в процессе доставки и будет доставлен вам в течение 3 часов.\n\nСпасибо за ваш заказ!"
-                else:
-                    subject = f"Обновление статуса заказа #{order.pk}"
-                    message = f"Здравствуйте, {order.user.username}!\n\nСтатус вашего заказа #{order.pk} был изменен на: {order.get_status_display()}.\n\nСпасибо за ваш заказ!"
-
-
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,  # Отправитель (укажите в settings.py)
-                    [order.email],  # Получатель (email из заказа)
-                    fail_silently=False,
-                )
+                send_order_status_email(order)
 
             messages.success(request, f"Статус заказа #{order.pk} успешно изменен.")
             return redirect('builds:employee_order_list')
@@ -626,7 +614,6 @@ def employee_order_update(request, order_id):
         form = CustomOrderUpdateForm(instance=order, status_choices=status_choices)
 
     return render(request, 'builds/employee_order_update.html', {'form': form, 'order': order})
-
 
 from django.core.cache import cache
 import logging
@@ -708,7 +695,8 @@ def checkout(request):
             total_amount=total_price,
             order_date=timezone.now()
         )
-        # order.save() # Не нужно, т.к. используем Order.objects.create()
+
+        print(f"DEBUG: Order {order.pk}, status: '{order.status}' AFTER CREATION")  # Добавляем отладочный вывод
 
         # Создание позиций заказа
         for item in cart_items:

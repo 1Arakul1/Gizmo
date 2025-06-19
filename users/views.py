@@ -1,25 +1,18 @@
 # users/views.py
+# users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from builds.models import Build, CartItem
-from .utils import send_registration_email, send_password_reset_email  # Добавляем импорт
+from builds.models import Build, CartItem, Order, OrderItem, ReturnRequest
+from .utils import send_registration_email, send_password_reset_email, send_order_status_email  # Добавляем импорт
 from django.contrib.auth import authenticate, login
 from .forms import CustomUserCreationForm
-import secrets # Импортируем secrets
-import string # Импортируем string
-from .utils import send_registration_email  # Import the email function
-from django.contrib.auth import authenticate, login  # Import login
-from django.contrib.auth import get_user_model  # Get the User model
-from builds.models import Build, CartItem, Order
-from builds.models import Build, CartItem, Order, OrderItem, ReturnRequest
+import secrets
+import string
 from django.db import models
-
-
-from django.db import models # Импортируем models
 
 @login_required
 def profile(request):
@@ -30,6 +23,11 @@ def profile(request):
 
     # Получаем ВСЕ заказы пользователя, сортированные по дате
     orders = Order.objects.filter(user=user).order_by('-order_date')
+
+    # Проверяем статус заказов и отправляем уведомления
+    for order in orders:
+        if order.status in ['delivered', 'delivering']:
+            send_order_status_email(order)
 
     return_requests = ReturnRequest.objects.filter(user=user)
 

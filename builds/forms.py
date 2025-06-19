@@ -3,11 +3,11 @@ from django import forms
 from .models import Order
 
 class CustomOrderUpdateForm(forms.ModelForm):
-    status = forms.ChoiceField(label='Статус заказа')  #  Определяем поле, но choices пока не задаем
+    status = forms.ChoiceField(label='Статус', choices=Order.STATUS_CHOICES)
 
     class Meta:
         model = Order
-        fields = ['status'] # Только статус
+        fields = ['status']
 
     def __init__(self, *args, **kwargs):
         status_choices = kwargs.pop('status_choices', [])  # Получаем status_choices из kwargs
