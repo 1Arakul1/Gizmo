@@ -1,5 +1,5 @@
 # components/forms.py
-
+from .models import Review
 from django import forms
 from .models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Manufacturer
 from .models import Cooler
@@ -77,3 +77,13 @@ class CoolerForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['manufacturer'].queryset = Manufacturer.objects.filter(component_type='cooler') # Ограничение по производителю
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['text', 'rating']
+        widgets = {
+            'text': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'rating': forms.Select(attrs={'class': 'form-control'}),
+        }

@@ -1,7 +1,12 @@
-# components/models.py
 from django.db import models
-from django.core.validators import MinValueValidator # Добавляем валидатор для price
-from django.contrib import admin # Импортируем admin
+from django.core.validators import MinValueValidator
+from django.contrib import admin
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 
 class Manufacturer(models.Model):
     """Производитель компонентов."""
@@ -16,6 +21,7 @@ class Manufacturer(models.Model):
             ('storage', 'Накопитель'),
             ('psu', 'Блок питания'),
             ('case', 'Корпус'),
+            ('cooler', 'Охлаждение'),  # Fixed typo here
         ],
         verbose_name="Тип компонента",
         blank=True,
@@ -29,6 +35,7 @@ class Manufacturer(models.Model):
         verbose_name = "Производитель"
         verbose_name_plural = "Производители"
 
+
 class CPU(models.Model):
     """Процессор."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
@@ -36,7 +43,8 @@ class CPU(models.Model):
     cores = models.IntegerField(verbose_name="Количество ядер")
     frequency = models.FloatField(verbose_name="Частота (ГГц)")
     tdp = models.IntegerField(verbose_name="TDP (Вт)")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     socket = models.CharField(max_length=50, verbose_name="Сокет")
     image = models.ImageField(upload_to='cpu_images/', verbose_name="Изображение", blank=True, null=True)
 
@@ -52,6 +60,10 @@ class CPU(models.Model):
         """Проверяет совместимость сокета процессора и материнской платы."""
         return self.socket == motherboard.socket
 
+    reviews = GenericRelation('components.Review',
+                                related_query_name='cpu')  # Use string representation to avoid circular import
+
+
 class Motherboard(models.Model):
     """Материнская плата."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
@@ -63,7 +75,8 @@ class Motherboard(models.Model):
     ram_type = models.CharField(max_length=10, verbose_name="Тип RAM (DDR4, DDR5)")
     max_ram_frequency = models.IntegerField(verbose_name="Максимальная частота RAM")
     expansion_slots = models.TextField(verbose_name="Слоты расширения")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='motherboard_images/', verbose_name="Изображение", blank=True, null=True)
 
     def __str__(self):
@@ -82,6 +95,9 @@ class Motherboard(models.Model):
         """Проверяет совместимость типа RAM и частоты."""
         return self.ram_type == ram.type and self.max_ram_frequency >= ram.frequency
 
+    reviews = GenericRelation('components.Review', related_query_name='motherboard')
+
+
 class RAM(models.Model):
     """Оперативная память."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
@@ -89,7 +105,8 @@ class RAM(models.Model):
     capacity = models.IntegerField(verbose_name="Объем (ГБ)")
     frequency = models.IntegerField(verbose_name="Частота (МГц)")
     type = models.CharField(max_length=10, verbose_name="Тип (DDR4, DDR5)")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='ram_images/', verbose_name="Изображение", blank=True, null=True)
 
     def __str__(self):
@@ -104,6 +121,9 @@ class RAM(models.Model):
         """Проверяет совместимость типа RAM и частоты с материнской платой."""
         return self.type == motherboard.ram_type and self.frequency <= motherboard.max_ram_frequency
 
+    reviews = GenericRelation('components.Review', related_query_name='ram')
+
+
 class GPU(models.Model):
     """Видеокарта."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
@@ -111,7 +131,8 @@ class GPU(models.Model):
     memory = models.IntegerField(verbose_name="Объем памяти (ГБ)")
     frequency = models.FloatField(verbose_name="Частота (ГГц)")  # Частота ядра
     tdp = models.IntegerField(verbose_name="TDP (Вт)")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='gpu_images/', verbose_name="Изображение", blank=True, null=True)
     interface = models.CharField(max_length=50, verbose_name="Интерфейс", default="PCIe x16")  # Добавлено поле interface
 
@@ -127,6 +148,9 @@ class GPU(models.Model):
         """Проверяет, достаточно ли мощности блока питания для видеокарты."""
         return self.tdp <= psu.power
 
+    reviews = GenericRelation('components.Review', related_query_name='gpu')
+
+
 class Storage(models.Model):
     """Накопитель (SSD/HDD)."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
@@ -136,7 +160,8 @@ class Storage(models.Model):
     interface = models.CharField(max_length=50, verbose_name="Интерфейс")
     read_speed = models.IntegerField(verbose_name="Скорость чтения (МБ/с)")
     write_speed = models.IntegerField(verbose_name="Скорость записи (МБ/с)")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='storage_images/', verbose_name="Изображение", blank=True, null=True)
 
     def __str__(self):
@@ -147,13 +172,17 @@ class Storage(models.Model):
         verbose_name_plural = "Накопители"
         ordering = ['manufacturer', 'model']
 
+    reviews = GenericRelation('components.Review', related_query_name='storage')
+
+
 class PSU(models.Model):
     """Блок питания."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
     model = models.CharField(max_length=255, verbose_name="Модель")
     power = models.IntegerField(verbose_name="Мощность (Вт)")
     certification = models.CharField(max_length=50, verbose_name="Сертификация")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='psu_images/', verbose_name="Изображение", blank=True, null=True)
 
     def __str__(self):
@@ -168,13 +197,17 @@ class PSU(models.Model):
         """Проверяет, достаточно ли мощности блока питания для видеокарты."""
         return self.power >= gpu.tdp
 
+    reviews = GenericRelation('components.Review', related_query_name='psu')
+
+
 class Case(models.Model):
     """Корпус."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
     model = models.CharField(max_length=255, verbose_name="Модель")
     form_factor = models.CharField(max_length=50, verbose_name="Форм-фактор")
     dimensions = models.CharField(max_length=50, verbose_name="Размеры")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])  # Валидация цены
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='case_images/', verbose_name="Изображение", blank=True, null=True)
     supported_motherboard_form_factors = models.CharField(
         max_length=255,
@@ -190,19 +223,28 @@ class Case(models.Model):
         verbose_name_plural = "Корпуса"
         ordering = ['manufacturer', 'model']
 
-from django.contrib.auth.models import User
+    reviews = GenericRelation('components.Review', related_query_name='case')
+
 
 class Build(models.Model):
     """Сборка компьютера."""
-    name = models.CharField(max_length=255, verbose_name="Название сборки", blank=True, null=True) #Добавил поле название сборки
+    name = models.CharField(max_length=255, verbose_name="Название сборки", blank=True,
+                            null=True)  # Добавил поле название сборки
     cpu = models.ForeignKey(CPU, on_delete=models.CASCADE, verbose_name="Процессор", related_name='builds')
-    motherboard = models.ForeignKey(Motherboard, on_delete=models.CASCADE, verbose_name="Материнская плата", blank=True, null=True, related_name='builds')
-    ram = models.ForeignKey(RAM, on_delete=models.CASCADE, verbose_name="Оперативная память", blank=True, null=True, related_name='builds')
-    gpu = models.ForeignKey(GPU, on_delete=models.CASCADE, verbose_name="Видеокарта", blank=True, null=True, related_name='builds')
-    storage = models.ForeignKey(Storage, on_delete=models.CASCADE, verbose_name="Накопитель", blank=True, null=True, related_name='builds')
-    psu = models.ForeignKey(PSU, on_delete=models.CASCADE, verbose_name="Блок питания", blank=True, null=True, related_name='builds')
-    case = models.ForeignKey(Case, on_delete=models.CASCADE, verbose_name="Корпус", blank=True, null=True, related_name='builds')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь", related_name='builds', blank=True, null=True)
+    motherboard = models.ForeignKey(Motherboard, on_delete=models.CASCADE, verbose_name="Материнская плата",
+                                     blank=True, null=True, related_name='builds')
+    ram = models.ForeignKey(RAM, on_delete=models.CASCADE, verbose_name="Оперативная память", blank=True, null=True,
+                              related_name='builds')
+    gpu = models.ForeignKey(GPU, on_delete=models.CASCADE, verbose_name="Видеокарта", blank=True, null=True,
+                              related_name='builds')
+    storage = models.ForeignKey(Storage, on_delete=models.CASCADE, verbose_name="Накопитель", blank=True, null=True,
+                                  related_name='builds')
+    psu = models.ForeignKey(PSU, on_delete=models.CASCADE, verbose_name="Блок питания", blank=True, null=True,
+                              related_name='builds')
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, verbose_name="Корпус", blank=True, null=True,
+                              related_name='builds')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь", related_name='builds',
+                             blank=True, null=True)
 
     def __str__(self):
         return f"Сборка {self.pk} - {self.name if self.name else 'Без имени'}"
@@ -232,6 +274,7 @@ class Build(models.Model):
         verbose_name_plural = "Сборки"
         ordering = ['name']
 
+
 class Cooler(models.Model):
     """Охлаждение (кулер для CPU)."""
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE, verbose_name="Производитель")
@@ -240,9 +283,12 @@ class Cooler(models.Model):
         ('air', 'Воздушное'),
         ('liquid', 'Жидкостное'),
     ])
-    fan_size = models.IntegerField(verbose_name="Размер вентилятора (мм)", blank=True, null=True)  # Только для воздушных
-    radiator_size = models.CharField(max_length=50, verbose_name="Размер радиатора", blank=True, null=True)  # Только для жидкостных
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена", validators=[MinValueValidator(0)])
+    fan_size = models.IntegerField(verbose_name="Размер вентилятора (мм)", blank=True,
+                                    null=True)  # Только для воздушных
+    radiator_size = models.CharField(max_length=50, verbose_name="Размер радиатора", blank=True,
+                                       null=True)  # Только для жидкостных
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена",
+                                 validators=[MinValueValidator(0)])
     image = models.ImageField(upload_to='cooler_images/', verbose_name="Изображение", blank=True, null=True)
 
     def __str__(self):
@@ -256,7 +302,10 @@ class Cooler(models.Model):
     def is_compatible_with_cpu(self, cpu):
         """Проверяет совместимость с CPU."""
         # Добавьте логику проверки (например, сокет, TDP и т.д.)
-        return True #  Заглушка
+        return True  # Заглушка
+
+    reviews = GenericRelation('components.Review', related_query_name='cooler')
+
 
 class Stock(models.Model):
     """Модель для учета складских запасов компонентов."""
@@ -306,9 +355,31 @@ class Stock(models.Model):
             return "Неизвестный тип компонента"
 
     def get_component_type_display(self):
-           return dict(self.COMPONENT_TYPE_CHOICES).get(self.component_type, 'Unknown')
+        return dict(self.COMPONENT_TYPE_CHOICES).get(self.component_type, 'Unknown')
 
     class Meta:
         verbose_name = "Складской запас"
         verbose_name_plural = "Складские запасы"
-        unique_together = ('component_type', 'component_id')  # Гарантирует уникальность записи для каждого компонента
+        unique_together = ('component_type', 'component_id')  # Гарантирует уникальность записи для каждого компонен
+
+
+class Review(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    text = models.TextField(verbose_name="Текст отзыва")
+    rating = models.IntegerField(choices=[(1, "1 звезда"), (2, "2 звезды"), (3, "3 звезды"), (4, "4 звезды"),
+                                           (5, "5 звезд")], verbose_name="Рейтинг")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    # Generic Foreign Key
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Отзыв от {self.user.username} на {self.content_object}"

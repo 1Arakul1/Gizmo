@@ -1,3 +1,4 @@
+<!-- templates/components/motherboard_detail.html -->
 {% extends "base.html" %}
 
 {% block content %}
@@ -18,10 +19,11 @@
                 <p><strong>Чипсет:</strong> {{ motherboard.chipset }}</p>
                 <p><strong>Тип памяти:</strong> {{ motherboard.memory_type }}</p>
                 <p><strong>Цена:</strong> {{ motherboard.price }} руб.</p>
-                
+
                 <p>component_type: motherboard</p>
                 <p>component_id: {{ motherboard.pk }}</p>
-                <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}" data-url="{% url 'builds:add_to_cart' %}">
+                <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}"
+                      data-url="{% url 'builds:add_to_cart' %}">
                     {% csrf_token %}
                     <input type="hidden" name="component_type" value="motherboard">
                     <input type="hidden" name="component_id" value="{{ motherboard.pk }}">
@@ -31,10 +33,41 @@
                     </div>
                     <button type="submit" class="btn btn-success">Добавить в корзину</button>
                 </form>
-                <div id="add-to-cart-message"></div>  <!-- Контейнер для сообщения -->
+                <div id="add-to-cart-message"></div>
+                <!-- Контейнер для сообщения -->
             </div>
         </div>
         <a href="{% url 'components:motherboard_list' %}" class="btn btn-secondary mt-3">Вернуться к списку материнских плат</a>
+    </div>
+
+    <!--  ОТЗЫВЫ  -->
+    <div class="container mt-5">
+        <h2>Отзывы</h2>
+
+        {% if motherboard.reviews.all %}
+            {% for review in motherboard.reviews.all %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ review.user.username }} - {{ review.rating }} звезд</h5>
+                        <p class="card-text">{{ review.text }}</p>
+                        <p class="card-text"><small class="text-muted">{{ review.created_at }}</small></p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Пока нет ни одного отзыва.</p>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            <h2>Добавить отзыв</h2>
+            <form method="post" action="{% url 'components:add_review' motherboard.pk 'motherboard' %}">
+                {% csrf_token %}
+                {{ review_form.as_p }}
+                <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+            </form>
+        {% else %}
+            <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить отзыв.</p>
+        {% endif %}
     </div>
         <!-- Индикатор загрузки -->
     <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000;">

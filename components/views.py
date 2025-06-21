@@ -1,14 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Stock
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Stock, Manufacturer
+from .forms import ReviewForm
+from django.contrib.contenttypes.models import ContentType  # Correct import
 
 
 class ComponentSearchForm(forms.Form):
@@ -41,7 +41,8 @@ def cpu_list(request):
 
 def cpu_detail(request, pk):
     cpu = get_object_or_404(CPU, pk=pk)
-    return render(request, 'components/cpu_detail.html', {'cpu': cpu})
+    review_form = ReviewForm()
+    return render(request, 'components/cpu_detail.html', {'cpu': cpu, 'review_form': review_form})
 
 
 def gpu_list(request):
@@ -70,7 +71,8 @@ def gpu_list(request):
 
 def gpu_detail(request, pk):
     gpu = get_object_or_404(GPU, pk=pk)
-    return render(request, 'components/gpu_detail.html', {'gpu': gpu})
+    review_form = ReviewForm()
+    return render(request, 'components/gpu_detail.html', {'gpu': gpu, 'review_form': review_form})
 
 
 def motherboard_list(request):
@@ -94,12 +96,14 @@ def motherboard_list(request):
     except EmptyPage:
         motherboards = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/motherboard_list.html', {'motherboards': motherboards, 'form': form, 'query': query})
+    return render(request, 'components/motherboard_list.html',
+                  {'motherboards': motherboards, 'form': form, 'query': query})
 
 
 def motherboard_detail(request, pk):
     motherboard = get_object_or_404(Motherboard, pk=pk)
-    return render(request, 'components/motherboard_detail.html', {'motherboard': motherboard})
+    review_form = ReviewForm()
+    return render(request, 'components/motherboard_detail.html', {'motherboard': motherboard, 'review_form': review_form})
 
 
 def ram_list(request):
@@ -128,7 +132,8 @@ def ram_list(request):
 
 def ram_detail(request, pk):
     ram = get_object_or_404(RAM, pk=pk)
-    return render(request, 'components/ram_detail.html', {'ram': ram})
+    review_form = ReviewForm()
+    return render(request, 'components/ram_detail.html', {'ram': ram, 'review_form': review_form})
 
 
 def storage_list(request):
@@ -157,7 +162,8 @@ def storage_list(request):
 
 def storage_detail(request, pk):
     storage = get_object_or_404(Storage, pk=pk)
-    return render(request, 'components/storage_detail.html', {'storage': storage})
+    review_form = ReviewForm()
+    return render(request, 'components/storage_detail.html', {'storage': storage, 'review_form': review_form})
 
 
 def psu_list(request):
@@ -186,7 +192,8 @@ def psu_list(request):
 
 def psu_detail(request, pk):
     psu = get_object_or_404(PSU, pk=pk)
-    return render(request, 'components/psu_detail.html', {'psu': psu})
+    review_form = ReviewForm()
+    return render(request, 'components/psu_detail.html', {'psu': psu, 'review_form': review_form})
 
 
 def case_list(request):
@@ -215,7 +222,8 @@ def case_list(request):
 
 def case_detail(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    return render(request, 'components/case_detail.html', {'case': case})
+    review_form = ReviewForm()
+    return render(request, 'components/case_detail.html', {'case': case, 'review_form': review_form})
 
 
 def cooler_list(request):
@@ -244,11 +252,67 @@ def cooler_list(request):
 
 def cooler_detail(request, pk):
     cooler = get_object_or_404(Cooler, pk=pk)
-    return render(request, 'components/cooler_detail.html', {'cooler': cooler})
+    review_form = ReviewForm()
+    return render(request, 'components/cooler_detail.html', {'cooler': cooler, 'review_form': review_form})
+
+
+@login_required
+def add_review(request, pk, component_type):
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+
+            if component_type == 'cpu':
+                component = get_object_or_404(CPU, pk=pk)
+            elif component_type == 'gpu':
+                component = get_object_or_404(GPU, pk=pk)
+            elif component_type == 'motherboard':
+                component = get_object_or_404(Motherboard, pk=pk)
+            elif component_type == 'ram':
+                component = get_object_or_404(RAM, pk=pk)
+            elif component_type == 'storage':
+                component = get_object_or_404(Storage, pk=pk)
+            elif component_type == 'psu':
+                component = get_object_or_404(PSU, pk=pk)
+            elif component_type == 'case':
+                component = get_object_or_404(Case, pk=pk)
+            elif component_type == 'cooler':
+                component = get_object_or_404(Cooler, pk=pk)
+            else:
+                raise ValueError("Неверный тип компонента")
+
+            if component:
+                review.content_object = component
+                review.save()
+                # Construct the URL based on the component type and ID.
+                return redirect(reverse(f'components:{component_type}_detail', kwargs={'pk': pk}))
+            else:
+                # Handle the case where no component was found.  This should ideally never happen
+                # given the get_object_or_404 calls, but it's good to be defensive.
+                return redirect('home') # Or some other safe default.
+        else:
+            # Если форма не валидна, нужно передать ее обратно в шаблон, чтобы показать ошибки.
+            # Determine the component type and ID to render the detail template correctly
+            if component_type == 'cpu':
+                component = get_object_or_404(CPU, pk=pk)
+                template = 'components/cpu_detail.html'
+            # (Add similar blocks for other component types)
+            else:
+                # Fallback if no component found or if there's an error in the component_type
+                return redirect('home')
+
+            return render(request, template, {'component': component, 'review_form': form})
+    else:
+        # Если метод не POST, это ошибка.  Нужно перенаправить пользователя или показать страницу с ошибкой.
+        return redirect('home') # Или другая подходящая страница.
+
 
 
 def is_employee(user):  # Assuming you have this function
     return user.is_staff
+
 
 @login_required
 @user_passes_test(is_employee)
@@ -271,6 +335,7 @@ def reduce_stock_item(request, pk):
     stock_item.save()
     return HttpResponseRedirect(reverse('components:stock_list'))
 
+
 @login_required
 @user_passes_test(is_employee)
 def stock_list_view(request):
@@ -284,26 +349,26 @@ def stock_list_view(request):
         # Создаем Q-объекты для поиска по разным полям
         q_objects = Q()
 
-        #  Проходимся по каждому элементу и ищем по нужным полям, в зависимости от типа компонента
-        for stock_item in stock_items:  #  Проходимся по каждому элементу
-          if stock_item.component_type == 'cpu':
-            q_objects |= Q(cpu__manufacturer__icontains=query) | Q(cpu__model__icontains=query)
-          elif stock_item.component_type == 'gpu':
-            q_objects |= Q(gpu__manufacturer__icontains=query) | Q(gpu__model__icontains=query)
-          elif stock_item.component_type == 'motherboard':
-              q_objects |= Q(motherboard__manufacturer__icontains=query) | Q(motherboard__model__icontains=query)
-          elif stock_item.component_type == 'ram':
-              q_objects |= Q(ram__manufacturer__icontains=query) | Q(ram__model__icontains=query)
-          elif stock_item.component_type == 'storage':
-              q_objects |= Q(storage__manufacturer__icontains=query) | Q(storage__model__icontains=query)
-          elif stock_item.component_type == 'psu':
-              q_objects |= Q(psu__manufacturer__icontains=query) | Q(psu__model__icontains=query)
-          elif stock_item.component_type == 'case':
-              q_objects |= Q(case__manufacturer__icontains=query) | Q(case__model__icontains=query)
-          elif stock_item.component_type == 'cooler':
-              q_objects |= Q(cooler__manufacturer__icontains=query) | Q(cooler__model__icontains=query)
-          else:
-            q_objects |= Q(component_type__icontains=query)
+        # Проходимся по каждому элементу и ищем по нужным полям, в зависимости от типа компонента
+        for stock_item in stock_items:  # Проходимся по каждому элементу
+            if stock_item.component_type == 'cpu':
+                q_objects |= Q(cpu__manufacturer__icontains=query) | Q(cpu__model__icontains=query)
+            elif stock_item.component_type == 'gpu':
+                q_objects |= Q(gpu__manufacturer__icontains=query) | Q(gpu__model__icontains=query)
+            elif stock_item.component_type == 'motherboard':
+                q_objects |= Q(motherboard__manufacturer__icontains=query) | Q(motherboard__model__icontains=query)
+            elif stock_item.component_type == 'ram':
+                q_objects |= Q(ram__manufacturer__icontains=query) | Q(ram__model__icontains=query)
+            elif stock_item.component_type == 'storage':
+                q_objects |= Q(storage__manufacturer__icontains=query) | Q(storage__model__icontains=query)
+            elif stock_item.component_type == 'psu':
+                q_objects |= Q(psu__manufacturer__icontains=query) | Q(psu__model__icontains=query)
+            elif stock_item.component_type == 'case':
+                q_objects |= Q(case__manufacturer__icontains=query) | Q(case__model__icontains=query)
+            elif stock_item.component_type == 'cooler':
+                q_objects |= Q(cooler__manufacturer__icontains=query) | Q(cooler__model__icontains=query)
+            else:
+                q_objects |= Q(component_type__icontains=query)
 
         # Фильтруем stock_items, используя объединенные Q-объекты
         stock_items = stock_items.filter(q_objects).distinct()

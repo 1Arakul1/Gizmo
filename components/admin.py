@@ -1,7 +1,5 @@
-# components/admin.py
-# components/admin.py
 from django.contrib import admin
-from .models import Manufacturer, CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Stock
+from .models import Manufacturer, CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Stock, Build, Review  # Import Review
 from .forms import CPUForm, GPUForm, MotherboardForm, RAMForm, StorageForm, PSUForm, CaseForm  # Удалили Stock
 
 
@@ -110,4 +108,8 @@ class StockAdmin(admin.ModelAdmin):
     actions = [replenish_stock, reduce_stock]  # Добавляем actions
 
 
-
+@admin.register(Review)  # Register the Review model
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('user', 'text', 'rating', 'content_type', 'object_id')
+    list_filter = ('content_type', 'rating')
+    search_fields = ('user__username', 'text')
