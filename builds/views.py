@@ -566,8 +566,14 @@ def employee_order_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    return render(request, 'builds/employee_order_list.html', {'page_obj': page_obj, 'query': query})
+    # Получаем количество запросов на возврат
+    return_request_count = ReturnRequest.objects.filter(status='pending').count()  # Учитываем только "pending"
 
+    return render(
+        request,
+        'builds/employee_order_list.html',
+        {'page_obj': page_obj, 'query': query, 'return_request_count': return_request_count}  # Добавляем return_request_count
+    )
 
 
 # Представление для обновления статуса заказа

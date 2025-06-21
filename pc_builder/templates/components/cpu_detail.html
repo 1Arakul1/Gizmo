@@ -2,135 +2,195 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container">
-        <h1>{{ cpu.manufacturer }} {{ cpu.model }}</h1>
-        <div class="row">
-            <div class="col-md-4">
-                {% if cpu.image %}
-                    <img src="" alt="{{ cpu.model }}" class="img-fluid" style="max-width: 100%;">
-                {% else %}
-                    <p>Изображение отсутствует</p>
-                {% endif %}
-            </div>
-            <div class="col-md-8">
-                <p><strong>Производитель:</strong> {{ cpu.manufacturer }}</p>
-                <p><strong>Модель:</strong> {{ cpu.model }}</p>
-                <p><strong>Количество ядер:</strong> {{ cpu.cores }}</p>
-                <p><strong>Частота:</strong> {{ cpu.frequency }} ГГц</p>
-                <p><strong>TDP:</strong> {{ cpu.tdp }} Вт</p>
-                <p><strong>Сокет:</strong> {{ cpu.socket }}</p>
-                <p><strong>Цена:</strong> {{ cpu.price }} руб.</p>
-                <!-- Добавьте другие характеристики процессора, если они есть в вашей модели -->
-                <p>component_type: cpu</p>
-                <p>component_id: {{ cpu.pk }}</p>
-                <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}"
-                      data-url="{% url 'builds:add_to_cart' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="component_type" value="cpu">
-                    <input type="hidden" name="component_id" value="{{ cpu.pk }}">
-                    <div class="form-group">
-                        <label for="quantity">Количество:</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1">
-                    </div>
-                    <button type="submit" class="btn btn-success">Добавить в корзину</button>
-                </form>
-                <div id="add-to-cart-message"></div>
-                <!-- Контейнер для сообщения -->
+<div class="container my-4">
+    <h1 class="mb-4">{{ cpu.manufacturer }} {{ cpu.model }}</h1>
+    <div class="row">
+        <div class="col-md-4">
+            {% if cpu.image %}
+                <img src="{{ cpu.image.url }}" alt="{{ cpu.model }}" class="img-fluid rounded shadow-sm">
+            {% else %}
+                <p>Изображение отсутствует</p>
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+    <div class="d-flex flex-column gap-3">
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-cpu-fill fs-3 text-primary me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">Производитель</div>
+                <div>{{ cpu.manufacturer }}</div>
             </div>
         </div>
-        <a href="{% url 'components:cpu_list' %}" class="btn btn-secondary mt-3">Вернуться к списку процессоров</a>
+
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-hdd-network-fill fs-3 text-success me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">Модель</div>
+                <div>{{ cpu.model }}</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-diagram-3-fill fs-3 text-warning me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">Количество ядер</div>
+                <div>{{ cpu.cores }}</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-speedometer2 fs-3 text-danger me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">Частота</div>
+                <div>{{ cpu.frequency }} ГГц</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-thermometer-half fs-3 text-info me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">TDP</div>
+                <div>{{ cpu.tdp }} Вт</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-plug-fill fs-3 text-secondary me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">Сокет</div>
+                <div>{{ cpu.socket }}</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm bg-light characteristic-card">
+            <i class="bi bi-cash-stack fs-3 text-success me-3"></i>
+            <div>
+                <div class="fw-bold text-muted small">Цена</div>
+                <div>{{ cpu.price }} руб.</div>
+            </div>
+        </div>
     </div>
 
-    <!--  ОТЗЫВЫ  -->
-    <div class="container mt-5">
-        <h2>Отзывы</h2>
+    <!-- форма добавления в корзину и остальное без изменений -->
+</div>
 
-        {% if cpu.reviews.all %}
-            {% for review in cpu.reviews.all %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ review.user.username }} - {{ review.rating }} звезд</h5>
-                        <p class="card-text">{{ review.text }}</p>
-                        <p class="card-text"><small class="text-muted">{{ review.created_at }}</small></p>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>Пока нет ни одного отзыва.</p>
-        {% endif %}
 
-        {% if user.is_authenticated %}
-            <h2>Добавить отзыв</h2>
-            <form method="post" action="{% url 'components:add_review' cpu.pk 'cpu' %}">
+            <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}" data-url="{% url 'builds:add_to_cart' %}" class="mt-4">
                 {% csrf_token %}
-                {{ review_form.as_p }}
-                <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                <input type="hidden" name="component_type" value="cpu">
+                <input type="hidden" name="component_id" value="{{ cpu.pk }}">
+                <div class="form-group mb-3" style="max-width: 150px;">
+                    <label for="quantity">Количество:</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1">
+                </div>
+                <button type="submit" class="btn btn-success">Добавить в корзину</button>
             </form>
-        {% else %}
-            <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить отзыв.</p>
-        {% endif %}
-    </div>
-
-    <!-- Индикатор загрузки -->
-    <div id="loading-overlay"
-         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px;">
-            Загрузка...
+            <div id="add-to-cart-message" class="mt-3"></div>
         </div>
     </div>
 
-    <script>
-        $(document).ready(function () {
-            function showLoading() {
-                $('#loading-overlay').show();
-            }
+    <a href="{% url 'components:cpu_list' %}" class="btn btn-secondary mt-4">Вернуться к списку процессоров</a>
+</div>
 
-            function hideLoading() {
-                $('#loading-overlay').hide();
-            }
+<div class="container mt-5">
+    <h2 class="mb-4">Отзывы</h2>
 
-            $('#add-to-cart-form').submit(function (event) {
-                event.preventDefault();
+    {% if cpu.reviews.all %}
+        {% for review in cpu.reviews.all %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ review.user.username }} -
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <span style="color: #ffc107;">&#9733;</span>
+                            {% else %}
+                                <span style="color: #e4e5e9;">&#9733;</span>
+                            {% endif %}
+                        {% endfor %}
+                    </h5>
+                    <p class="card-text">{{ review.text }}</p>
+                    <p class="card-text"><small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small></p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Пока нет ни одного отзыва.</p>
+    {% endif %}
 
-                var form = $(this);
-                var url = form.data('url');
+    {% if user.is_authenticated %}
+        <h3 class="mt-4 mb-3">Добавить отзыв</h3>
+        <form method="post" action="{% url 'components:add_review' cpu.pk 'cpu' %}">
+            {% csrf_token %}
+            {{ review_form.as_p }}
+            <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+        </form>
+    {% else %}
+        <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить отзыв.</p>
+    {% endif %}
+</div>
 
-                showLoading();
+<div id="loading-overlay"
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px; text-align: center;">
+        <div class="spinner-border text-light mb-2" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+        Загрузка...
+    </div>
+</div>
 
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    data: form.serialize(),
-                    dataType: 'json',
-                    success: function (response) {
-                        hideLoading();
-                        if (response.status === 'success') {
-                            // Перенаправление на страницу корзины
-                            window.location.href = "{% url 'builds:cart' %}";
-                            //  <-- Добавлено перенаправление
-                            // $('#add-to-cart-message').html('<div class="alert alert-success">' + response.message + '</div>');
-                            // if ($('#cart-item-count').length) {
-                            //     $('#cart-item-count').text(response.cart_item_count);
-                            // }
-                            // setTimeout(function() {
-                            //     $('#add-to-cart-message').empty();
-                            // }, 3000);
-                        } else {
-                            $('#add-to-cart-message').html('<div class="alert alert-danger">' + response.message + '</div>');
-                            setTimeout(function () {
-                                $('#add-to-cart-message').empty();
-                            }, 3000);
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        hideLoading();
-                        $('#add-to-cart-message').html('<div class="alert alert-danger">Произошла ошибка при добавлении в корзину.</div>');
+<script>
+    $(document).ready(function () {
+        function showLoading() {
+            $('#loading-overlay').show();
+        }
+
+        function hideLoading() {
+            $('#loading-overlay').hide();
+        }
+
+        $('#add-to-cart-form').submit(function (event) {
+            event.preventDefault();
+
+            var form = $(this);
+            var url = form.data('url');
+
+            showLoading();
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form.serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    hideLoading();
+                    if (response.status === 'success') {
+                        window.location.href = "{% url 'builds:cart' %}";
+                    } else {
+                        $('#add-to-cart-message').html('<div class="alert alert-danger">' + response.message + '</div>');
                         setTimeout(function () {
                             $('#add-to-cart-message').empty();
                         }, 3000);
                     }
-                });
+                },
+                error: function () {
+                    hideLoading();
+                    $('#add-to-cart-message').html('<div class="alert alert-danger">Произошла ошибка при добавлении в корзину.</div>');
+                    setTimeout(function () {
+                        $('#add-to-cart-message').empty();
+                    }, 3000);
+                }
             });
         });
-    </script>
+    });
+</script>
+
+<style>
+    .characteristic-card:hover {
+        background-color: #e9f5ff;
+        cursor: default;
+        transition: background-color 0.3s ease;
+    }
+</style>
 {% endblock %}
