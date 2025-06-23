@@ -335,56 +335,54 @@ def reduce_stock_item(request, pk):
     stock_item.save()
     return HttpResponseRedirect(reverse('components:stock_list'))
 
-
 @login_required
-@user_passes_test(is_employee)
+@user_passes_test(lambda u: u.is_staff)
 def stock_list_view(request):
-    """
-    Отображает список складских запасов для сотрудников с пагинацией и поиском.
-    """
     query = request.GET.get('q')
-    stock_items = Stock.objects.all()  # Начинаем с всего queryset
+    stock_items = Stock.objects.all()
 
     if query:
-        # Создаем Q-объекты для поиска по разным полям
-        q_objects = Q()
+        filtered_stock_items = []
+        for stock_item in stock_items:
+            component = None
+            try:
+                if stock_item.component_type == 'cpu':
+                    component = CPU.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'gpu':
+                    component = GPU.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'motherboard':
+                    component = Motherboard.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'ram':
+                    component = RAM.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'storage':
+                    component = Storage.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'psu':
+                    component = PSU.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'case':
+                    component = Case.objects.get(pk=stock_item.component_id)
+                elif stock_item.component_type == 'cooler':
+                    component = Cooler.objects.get(pk=stock_item.component_id)
 
-        # Проходимся по каждому элементу и ищем по нужным полям, в зависимости от типа компонента
-        for stock_item in stock_items:  # Проходимся по каждому элементу
-            if stock_item.component_type == 'cpu':
-                q_objects |= Q(cpu__manufacturer__icontains=query) | Q(cpu__model__icontains=query)
-            elif stock_item.component_type == 'gpu':
-                q_objects |= Q(gpu__manufacturer__icontains=query) | Q(gpu__model__icontains=query)
-            elif stock_item.component_type == 'motherboard':
-                q_objects |= Q(motherboard__manufacturer__icontains=query) | Q(motherboard__model__icontains=query)
-            elif stock_item.component_type == 'ram':
-                q_objects |= Q(ram__manufacturer__icontains=query) | Q(ram__model__icontains=query)
-            elif stock_item.component_type == 'storage':
-                q_objects |= Q(storage__manufacturer__icontains=query) | Q(storage__model__icontains=query)
-            elif stock_item.component_type == 'psu':
-                q_objects |= Q(psu__manufacturer__icontains=query) | Q(psu__model__icontains=query)
-            elif stock_item.component_type == 'case':
-                q_objects |= Q(case__manufacturer__icontains=query) | Q(case__model__icontains=query)
-            elif stock_item.component_type == 'cooler':
-                q_objects |= Q(cooler__manufacturer__icontains=query) | Q(cooler__model__icontains=query)
-            else:
-                q_objects |= Q(component_type__icontains=query)
+                if component:
+                    component_name = f"{component.manufacturer} {component.model}"  # Получаем имя компонента
+                    if (query.lower() in component_name.lower()) or \
+                       (query.lower() in str(stock_item.quantity).lower()): # добавил поиск по quantity
+                        filtered_stock_items.append(stock_item)
 
-        # Фильтруем stock_items, используя объединенные Q-объекты
-        stock_items = stock_items.filter(q_objects).distinct()
+            except (CPU.DoesNotExist, GPU.DoesNotExist, Motherboard.DoesNotExist, RAM.DoesNotExist,
+                    Storage.DoesNotExist, PSU.DoesNotExist, Case.DoesNotExist, Cooler.DoesNotExist):
+                pass  # Просто игнорируем, если компонент не найден
+
+        stock_items = filtered_stock_items  # Заменяем stock_items отфильтрованным списком
 
     paginator = Paginator(stock_items, 10)
     page = request.GET.get('page')
-
     try:
-        stock_items = paginator.page(page)
+        stock_items = paginator.get_page(page)
     except PageNotAnInteger:
         stock_items = paginator.page(1)
     except EmptyPage:
         stock_items = paginator.page(paginator.num_pages)
 
-    response = render(request, 'builds/stock_list.html', {'stock_items': stock_items, 'query': query})
-    response['Cache-Control'] = 'private, no-cache, no-store, must-revalidate'
-    response['Pragma'] = 'no-cache'
-    response['Expires'] = '0'
-    return response
+    context = {'stock_items': stock_items, 'query': query}
+    return render(request, 'builds/stock_list.html', context)
