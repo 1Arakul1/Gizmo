@@ -1,13 +1,14 @@
+# builds/urls.py
 from django.urls import path
 from . import views
 
-app_name = 'builds'  # **ВАЖНО!**
+app_name = 'builds'
 
 urlpatterns = [
     path('create/', views.build_create, name='build_create'),
+    path('build_preview/', views.build_preview, name='build_preview'),  # Добавлено!
     path('', views.build_list, name='build_list'),
     path('<int:pk>/', views.build_detail, name='build_detail'),
-    
     path('<int:pk>/edit/', views.build_edit, name='build_edit'),
     path('cart/', views.cart_view, name='cart'),
     path('add_to_cart/', views.add_to_cart, name='add_to_cart'),
@@ -22,14 +23,6 @@ urlpatterns = [
     path('get_compatible_motherboards/', views.get_compatible_motherboards, name='get_compatible_motherboards'),
     path('get_compatible_rams/', views.get_compatible_rams, name='get_compatible_rams'),
     path('get_compatible_cpu/', views.get_compatible_cpu, name='get_compatible_cpu'),
-
-
-
-  
-   
     path('employee/returns/', views.employee_return_requests, name='employee_return_requests'),
     path('employee/returns/<int:return_request_id>/', views.employee_process_return, name='employee_process_return'),
-    
 ]
-
-

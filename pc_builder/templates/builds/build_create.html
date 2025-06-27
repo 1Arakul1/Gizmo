@@ -11,103 +11,212 @@
             </div>
         {% endif %}
 
-        {% if form.errors %}
-            <div class="alert alert-danger">
-                <p>Пожалуйста, исправьте ошибки:</p>
-                <ul>
-                    {% for field, errors in form.errors.items %}
-                        {% for error in errors %}
-                            <li>{{ field }}: {{ error }}</li>
-                        {% endfor %}
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+        <div class="row">
+            <div class="col-md-8">  <!--  Форма выбора компонентов -->
+                <form method="post" class="form-group">
+                    {% csrf_token %}
 
-        <form method="post" class="form-group">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="cpu" class="form-label">Процессор:</label>
-                <select name="cpu" id="cpu" class="form-select">
-                    <option value="">---------</option>
-                    {% for cpu in cpus %}
-                        <option value="{{ cpu.pk }}" {% if request.POST.cpu|safe|default:""|add:"0" == cpu.pk|stringformat:"s" %}selected{% endif %}>{{ cpu.manufacturer }} {{ cpu.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для процессора -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Процессор</h5>
+                            <label for="cpu" class="form-label">Выберите процессор:</label>
+                            <select name="cpu" id="cpu" class="form-select">
+                                <option value="">---------</option>
+                                {% for cpu in cpus %}
+                                    <option value="{{ cpu.pk }}" {% if request.POST.cpu|safe|default:""|add:"0" == cpu.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ cpu.manufacturer }} {{ cpu.model }} - {{ cpu.frequency }} ГГц, {{ cpu.cores }} ядер - {{ cpu.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="gpu" class="form-label">Видеокарта:</label>
-                <select name="gpu" id="gpu" class="form-select">
-                    <option value="">---------</option>
-                    {% for gpu in gpus %}
-                        <option value="{{ gpu.pk }}" {% if request.POST.gpu|safe|default:""|add:"0" == gpu.pk|stringformat:"s" %}selected{% endif %}>{{ gpu.manufacturer }} {{ gpu.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для материнской платы -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Материнская плата</h5>
+                            <label for="motherboard" class="form-label">Выберите материнскую плату:</label>
+                            <select name="motherboard" id="motherboard" class="form-select">
+                                <option value="">---------</option>
+                                {% for motherboard in motherboards %}
+                                    <option value="{{ motherboard.pk }}" {% if request.POST.motherboard|safe|default:""|add:"0" == motherboard.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ motherboard.manufacturer }} {{ motherboard.model }} - {{ motherboard.chipset }} - {{ motherboard.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="motherboard" class="form-label">Материнская плата:</label>
-                <select name="motherboard" id="motherboard" class="form-select">
-                    <option value="">---------</option>
-                    {% for motherboard in motherboards %}
-                        <option value="{{ motherboard.pk }}" {% if request.POST.motherboard|safe|default:""|add:"0" == motherboard.pk|stringformat:"s" %}selected{% endif %}>{{ motherboard.manufacturer }} {{ motherboard.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для видеокарты -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Видеокарта</h5>
+                            <label for="gpu" class="form-label">Выберите видеокарту:</label>
+                            <select name="gpu" id="gpu" class="form-select">
+                                <option value="">---------</option>
+                                {% for gpu in gpus %}
+                                    <option value="{{ gpu.pk }}" {% if request.POST.gpu|safe|default:""|add:"0" == gpu.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ gpu.manufacturer }} {{ gpu.model }} - {{ gpu.memory }} ГБ - {{ gpu.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="ram" class="form-label">Оперативная память:</label>
-                <select name="ram" id="ram" class="form-select">
-                    <option value="">---------</option>
-                    {% for ram in rams %}
-                        <option value="{{ ram.pk }}" {% if request.POST.ram|safe|default:""|add:"0" == ram.pk|stringformat:"s" %}selected{% endif %}>{{ ram.manufacturer }} {{ ram.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для оперативной памяти -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Оперативная память</h5>
+                            <label for="ram" class="form-label">Выберите оперативную память:</label>
+                            <select name="ram" id="ram" class="form-select">
+                                <option value="">---------</option>
+                                {% for ram in rams %}
+                                    <option value="{{ ram.pk }}" {% if request.POST.ram|safe|default:""|add:"0" == ram.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ ram.manufacturer }} {{ ram.model }} - {{ ram.capacity }} ГБ, {{ ram.frequency }} МГц - {{ ram.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="storage" class="form-label">Накопитель:</label>
-                <select name="storage" id="storage" class="form-select">
-                    <option value="">---------</option>
-                    {% for storage in storages %}
-                        <option value="{{ storage.pk }}" {% if request.POST.storage|safe|default:""|add:"0" == storage.pk|stringformat:"s" %}selected{% endif %}>{{ storage.manufacturer }} {{ storage.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для накопителя -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Накопитель</h5>
+                            <label for="storage" class="form-label">Выберите накопитель:</label>
+                            <select name="storage" id="storage" class="form-select">
+                                <option value="">---------</option>
+                                {% for storage in storages %}
+                                    <option value="{{ storage.pk }}" {% if request.POST.storage|safe|default:""|add:"0" == storage.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ storage.manufacturer }} {{ storage.model }} - {{ storage.capacity }} ГБ, {{ storage.type }} - {{ storage.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="psu" class="form-label">Блок питания:</label>
-                <select name="psu" id="psu" class="form-select">
-                    <option value="">---------</option>
-                    {% for psu in psus %}
-                        <option value="{{ psu.pk }}" {% if request.POST.psu|safe|default:""|add:"0" == psu.pk|stringformat:"s" %}selected{% endif %}>{{ psu.manufacturer }} {{ psu.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для блока питания -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Блок питания</h5>
+                            <label for="psu" class="form-label">Выберите блок питания:</label>
+                            <select name="psu" id="psu" class="form-select">
+                                <option value="">---------</option>
+                                {% for psu in psus %}
+                                    <option value="{{ psu.pk }}" {% if request.POST.psu|safe|default:""|add:"0" == psu.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ psu.manufacturer }} {{ psu.model }} - {{ psu.power }} Вт - {{ psu.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="case" class="form-label">Корпус:</label>
-                <select name="case" id="case" class="form-select">
-                    <option value="">---------</option>
-                                        {% for case in cases %}
-                        <option value="{{ case.pk }}" {% if request.POST.case|safe|default:""|add:"0" == case.pk|stringformat:"s" %}selected{% endif %}>{{ case.manufacturer }} {{ case.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для корпуса -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Корпус</h5>
+                            <label for="case" class="form-label">Выберите корпус:</label>
+                            <select name="case" id="case" class="form-select">
+                                <option value="">---------</option>
+                                {% for case in cases %}
+                                    <option value="{{ case.pk }}" {% if request.POST.case|safe|default:""|add:"0" == case.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ case.manufacturer }} {{ case.model }} - {{ case.form_factor }} - {{ case.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="mb-3">
-                <label for="cooler" class="form-label">Охлаждение:</label>
-                <select name="cooler" id="cooler" class="form-select">
-                    <option value="">---------</option>
-                    {% for cooler in coolers %}
-                        <option value="{{ cooler.pk }}" {% if request.POST.cooler|safe|default:""|add:"0" == cooler.pk|stringformat:"s" %}selected{% endif %}>{{ cooler.manufacturer }} {{ cooler.model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <!-- Секция для кулера -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Охлаждение</h5>
+                            <label for="cooler" class="form-label">Выберите кулер:</label>
+                            <select name="cooler" id="cooler" class="form-select">
+                                <option value="">---------</option>
+                                {% for cooler in coolers %}
+                                    <option value="{{ cooler.pk }}" {% if request.POST.cooler|safe|default:""|add:"0" == cooler.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ cooler.manufacturer }} {{ cooler.model }} - {{ cooler.cooler_type }} - {{ cooler.price }} Р
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-            <button type="submit" class="btn btn-primary">Создать</button>
-        </form>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </form>
+            </div>
+            <div class="col-md-4">  <!-- Область сборки -->
+                <div id="build-preview-container">
+                    {% include 'builds/build_preview.html' %}
+                </div>
+            </div>
+        </div>
     </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        // Функция для получения CSRF токена
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', function() {
+                const cpuId = document.getElementById('cpu').value;
+                const gpuId = document.getElementById('gpu').value;
+                const motherboardId = document.getElementById('motherboard').value;
+                const ramId = document.getElementById('ram').value;
+                const storageId = document.getElementById('storage').value;
+                const psuId = document.getElementById('psu').value;
+                const caseId = document.getElementById('case').value;
+                const coolerId = document.getElementById('cooler').value;
+
+                fetch('/builds/build_preview/', { // Замени на свой URL
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        cpu: cpuId,
+                        gpu: gpuId,
+                        motherboard: motherboardId,
+                        ram: ramId,
+                        storage: storageId,
+                        psu: psuId,
+                        case: caseId,
+                        cooler: coolerId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error); // Отображаем ошибку
+                    } else {
+                        document.getElementById('build-preview-container').innerHTML = data.html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Произошла ошибка при загрузке данных.');
+                });
+            });
+        });
+    </script>
 {% endblock %}
 

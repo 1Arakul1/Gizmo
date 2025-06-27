@@ -35,7 +35,7 @@ load_dotenv()
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
 DEBUG = True
   # В production должно быть False
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '178.207.184.17']  # Замени на свой IP
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '188.225.120.28']  # Замени на свой IP
 
 # Application definition
 # settings.py

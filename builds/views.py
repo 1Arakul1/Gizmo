@@ -32,6 +32,12 @@ from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from users.utils import send_order_status_email 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Q
+from .models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Build
+from decimal import Decimal
+from django.http import JsonResponse
 
 def employee_check(user):
     """Проверяет, является ли пользователь сотрудником (имеет ли права персонала)."""
@@ -293,7 +299,7 @@ def build_create(request):
         storage_id = request.POST.get('storage')
         psu_id = request.POST.get('psu')
         case_id = request.POST.get('case')
-        cooler_id = request.POST.get('cooler')  # Получаем id кулера
+        cooler_id = request.POST.get('cooler')
 
         # Получаем объекты компонентов
         try:
@@ -304,15 +310,14 @@ def build_create(request):
             storage = get_object_or_404(Storage, pk=storage_id) if storage_id else None
             psu = get_object_or_404(PSU, pk=psu_id) if psu_id else None
             case = get_object_or_404(Case, pk=case_id) if case_id else None
-            cooler = get_object_or_404(Cooler, pk=cooler_id) if cooler_id else None  # Получаем кулер
-        except (ValueError, TypeError, CPU.DoesNotExist, GPU.DoesNotExist, Motherboard.DoesNotExist,
-                RAM.DoesNotExist, Storage.DoesNotExist, PSU.DoesNotExist, Case.DoesNotExist, Cooler.DoesNotExist):
+            cooler = get_object_or_404(Cooler, pk=cooler_id) if cooler_id else None
+        except (ValueError, TypeError, ObjectDoesNotExist):
             return render(request, 'builds/build_create.html',
                           {'error_message': 'Один из выбранных компонентов не найден.',
                            'cpus': CPU.objects.all(), 'gpus': GPU.objects.all(),
                            'motherboards': Motherboard.objects.all(), 'rams': RAM.objects.all(),
                            'storages': Storage.objects.all(), 'psus': PSU.objects.all(),
-                           'cases': Case.objects.all(), 'coolers': Cooler.objects.all()})  # Добавляем coolers в context
+                           'cases': Case.objects.all(), 'coolers': Cooler.objects.all()})
 
         # Проверки совместимости
         error_message = None
@@ -341,32 +346,15 @@ def build_create(request):
                            'storages': Storage.objects.all(), 'psus': PSU.objects.all(),
                            'cases': Case.objects.all(), 'coolers': Cooler.objects.all()})
 
-
         # Создаем сборку
-        total_price = Decimal('0.0')
-        if cpu:
-            total_price += cpu.price
-        if gpu:
-            total_price += gpu.price
-        if motherboard:
-            total_price += motherboard.price
-        if ram:
-            total_price += ram.price
-        if storage:
-            total_price += storage.price
-        if psu:
-            total_price += psu.price
-        if case:
-            total_price += case.price
-        if cooler:
-            total_price += cooler.price  # Добавляем цену кулера
+        total_price = sum(component.price for component in [cpu, gpu, motherboard, ram, storage, psu, case, cooler] if component and component.price is not None)
 
-        build = Build(user=request.user, cpu=cpu, gpu=gpu, motherboard=motherboard, ram=ram, storage=storage, psu=psu, case=case, cooler=cooler, total_price=total_price)  # Добавляем cooler в аргументы
+        build = Build(user=request.user, cpu=cpu, gpu=gpu, motherboard=motherboard, ram=ram, storage=storage, psu=psu, case=case, cooler=cooler, total_price=total_price)
         try:
             build.save()
             return redirect('builds:build_detail', pk=build.pk)
         except ValidationError as e:
-             return render(request, 'builds/build_create.html',
+            return render(request, 'builds/build_create.html',
                           {'error_message': f'Ошибка сохранения сборки: {e}',
                            'cpus': CPU.objects.all(), 'gpus': GPU.objects.all(),
                            'motherboards': Motherboard.objects.all(), 'rams': RAM.objects.all(),
@@ -381,9 +369,78 @@ def build_create(request):
         storages = Storage.objects.all()
         psus = PSU.objects.all()
         cases = Case.objects.all()
-        coolers = Cooler.objects.all()  # Получаем все кулеры
-        context = {'cpus': cpus, 'gpus': gpus, 'motherboards': motherboards, 'rams': rams, 'storages': storages, 'psus': psus, 'cases': cases, 'coolers': coolers}  # Добавляем coolers в context
+        coolers = Cooler.objects.all()
+        context = {'cpus': cpus, 'gpus': gpus, 'motherboards': motherboards, 'rams': rams, 'storages': storages, 'psus': psus, 'cases': cases, 'coolers': coolers}
         return render(request, 'builds/build_create.html', context)
+
+
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+def build_preview(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Неверный формат данных'}, status=400)
+
+        cpu_id = data.get('cpu')
+        gpu_id = data.get('gpu')
+        motherboard_id = data.get('motherboard')
+        ram_id = data.get('ram')
+        storage_id = data.get('storage')
+        psu_id = data.get('psu')
+        case_id = data.get('case')
+        cooler_id = data.get('cooler')
+
+        try:
+            cpu = CPU.objects.get(pk=cpu_id) if cpu_id else None
+            gpu = GPU.objects.get(pk=gpu_id) if gpu_id else None
+            motherboard = Motherboard.objects.get(pk=motherboard_id) if motherboard_id else None
+            ram = RAM.objects.get(pk=ram_id) if ram_id else None
+            storage = Storage.objects.get(pk=storage_id) if storage_id else None
+            psu = PSU.objects.get(pk=psu_id) if psu_id else None
+            case = Case.objects.get(pk=case_id) if case_id else None
+            cooler = Cooler.objects.get(pk=cooler_id) if cooler_id else None
+        except ObjectDoesNotExist:
+            return JsonResponse({'error': 'Один из компонентов не найден'}, status=400)
+
+        error_message = None
+
+        if cpu and motherboard and not cpu.is_compatible_with_motherboard(motherboard):
+            error_message = 'Процессор не совместим с материнской платой.'
+
+        if motherboard and ram and not motherboard.is_compatible_with_ram(ram):
+            error_message = 'Оперативная память не совместима с материнской платой.'
+
+        if gpu and psu and not psu.is_sufficient_for_gpu(gpu):
+            error_message = 'Мощности блока питания недостаточно для видеокарты.'
+
+        if cpu and cooler and not cooler.is_compatible_with_cpu(cpu):
+            error_message = 'Кулер не совместим с процессором.'
+
+        total_price = sum(
+            c.price for c in [cpu, gpu, motherboard, ram, storage, psu, case, cooler]
+            if c and c.price is not None
+        )
+
+        context = {
+            'cpu': cpu,
+            'gpu': gpu,
+            'motherboard': motherboard,
+            'ram': ram,
+            'storage': storage,
+            'psu': psu,
+            'case': case,
+            'cooler': cooler,
+            'total_price': total_price,
+            'error_message': error_message,
+        }
+        html = render(request, 'builds/build_preview.html', context).content.decode('utf-8')
+
+        return JsonResponse({'html': html})
+
+    return JsonResponse({'html': ''})
 
 
 def build_edit(request, pk):

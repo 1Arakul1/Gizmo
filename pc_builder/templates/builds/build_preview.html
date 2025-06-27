@@ -1,0 +1,123 @@
+{% load static %}
+
+<div class="build-preview">
+    {% if error_message %}
+        <div class="alert alert-danger">{{ error_message }}</div>
+    {% endif %}
+
+    {% if cpu %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if cpu.image %}
+                <img src="{{ cpu.image.url }}" alt="{{ cpu.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Процессор:</span><br>
+                <a href="{% url 'components:cpu_detail' cpu.pk %}">{{ cpu.manufacturer }} {{ cpu.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if motherboard %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if motherboard.image %}
+                <img src="{{ motherboard.image.url }}" alt="{{ motherboard.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Материнская плата:</span><br>
+                <a href="{% url 'components:motherboard_detail' motherboard.pk %}">{{ motherboard.manufacturer }} {{ motherboard.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if gpu %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if gpu.image %}
+                <img src="{{ gpu.image.url }}" alt="{{ gpu.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Видеокарта:</span><br>
+                <a href="{% url 'components:gpu_detail' gpu.pk %}">{{ gpu.manufacturer }} {{ gpu.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if ram %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if ram.image %}
+                <img src="{{ ram.image.url }}" alt="{{ ram.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Оперативная память:</span><br>
+                <a href="{% url 'components:ram_detail' ram.pk %}">{{ ram.manufacturer }} {{ ram.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if storage %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if storage.image %}
+                <img src="{{ storage.image.url }}" alt="{{ storage.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Накопитель:</span><br>
+                <a href="{% url 'components:storage_detail' storage.pk %}">{{ storage.manufacturer }} {{ storage.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if psu %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if psu.image %}
+                <img src="{{ psu.image.url }}" alt="{{ psu.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Блок питания:</span><br>
+                <a href="{% url 'components:psu_detail' psu.pk %}">{{ psu.manufacturer }} {{ psu.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if case %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if case.image %}
+                <img src="{{ case.image.url }}" alt="{{ case.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Корпус:</span><br>
+                <a href="{% url 'components:case_detail' case.pk %}">{{ case.manufacturer }} {{ case.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if cooler %}
+        <div class="d-flex align-items-center gap-3 mb-3">
+            {% if cooler.image %}
+                <img src="{{ cooler.image.url }}" alt="{{ cooler.model }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'images/no_image_available.png' %}" alt="Нет изображения" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: contain;">
+            {% endif %}
+            <div>
+                <span class="fw-semibold">Кулер:</span><br>
+                <a href="{% url 'components:cooler_detail' cooler.pk %}">{{ cooler.manufacturer }} {{ cooler.model }}</a>
+            </div>
+        </div>
+    {% endif %}
+
+    <h5>Итоговая цена: {{ total_price }} Р</h5>
+</div>
+
+
