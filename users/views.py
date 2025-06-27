@@ -1,18 +1,27 @@
 # users/views.py
-# users/views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.contrib.auth import get_user_model, authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+from django.contrib.auth.forms import UserCreationForm  # noqa: F401
+from django.contrib.auth.tokens import default_token_generator  # noqa: F401
+from django.db import models  # noqa: F401
+from django.contrib.auth import authenticate, login  # noqa: F401
+
 from builds.models import Build, CartItem, Order, OrderItem, ReturnRequest
-from .utils import send_registration_email, send_password_reset_email, send_order_status_email  # Добавляем импорт
-from django.contrib.auth import authenticate, login
 from .forms import CustomUserCreationForm
+from .utils import (
+    send_registration_email,
+    send_password_reset_email,
+    send_order_status_email,
+)
 import secrets
 import string
-from django.db import models
+
 
 @login_required
 def profile(request):
@@ -44,7 +53,9 @@ def profile(request):
 @login_required
 def create_return_request(request, order_item_id):
     print("create_return_request called!")  # Добавляем это
-    order_item = get_object_or_404(OrderItem, pk=order_item_id, order__user=request.user) # Добавлена проверка пользователя
+    order_item = get_object_or_404(
+        OrderItem, pk=order_item_id, order__user=request.user
+    )  # Добавлена проверка пользователя
 
     # Проверяем, что для этого заказа ещё нет запроса на возврат
     if order_item.order.return_request:
@@ -54,16 +65,26 @@ def create_return_request(request, order_item_id):
     if request.method == 'POST':
         reason = request.POST.get('reason')
         if reason:
-            return_request = ReturnRequest.objects.create(user=request.user, order_item=order_item, reason=reason)
+            return_request = ReturnRequest.objects.create(
+                user=request.user, order_item=order_item, reason=reason
+            )
             order_item.order.return_request = return_request
             order_item.order.save()
             messages.success(request, "Запрос на возврат успешно создан.")  # Добавлено сообщение об успехе
             return redirect('users:profile')  # Перенаправляем обратно в профиль
         else:
             # Обработка случая, когда причина не указана
-            return render(request, 'users/return_request_form.html', {'order_item': order_item, 'error': 'Пожалуйста, укажите причину возврата.'})
+            return render(
+                request,
+                'users/return_request_form.html',
+                {
+                    'order_item': order_item,
+                    'error': 'Пожалуйста, укажите причину возврата.',
+                },
+            )
 
     return render(request, 'users/return_request_form.html', {'order_item': order_item})
+
 
 def register(request):
     if request.method == 'POST':
@@ -73,10 +94,15 @@ def register(request):
             try:
                 send_registration_email(user)  # Send the email
                 username = form.cleaned_data.get('username')
-                messages.success(request, f'Account created for {username}! An email has been sent to your email.')
+                messages.success(
+                    request,
+                    f'Account created for {username}! An email has been sent to your email.',
+                )
                 return redirect('users:login')
             except Exception as e:
-                messages.error(request, f'Could not send email. Please contact administration.')
+                messages.error(
+                    request, 'Could not send email. Please contact administration.'
+                )
                 print(f"Error sending registration email: {e}")
                 user.delete()
                 return render(request, 'users/register.html', {'form': form})
@@ -98,7 +124,7 @@ def password_reset(request):
             user.set_password(new_password)
             user.save()
             # Отправляем письмо с новым паролем
-            send_password_reset_email(user, new_password) # Используем новую функцию
+            send_password_reset_email(user, new_password)  # Используем новую функцию
             messages.success(request, 'Новый пароль отправлен на ваш email.')
             return redirect('users:login')
         except User.DoesNotExist:

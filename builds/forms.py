@@ -1,6 +1,7 @@
-# builds/forms.py
 from django import forms
+
 from .models import Order
+
 
 class CustomOrderUpdateForm(forms.ModelForm):
     status = forms.ChoiceField(label='Статус', choices=Order.STATUS_CHOICES)
@@ -20,8 +21,10 @@ class OrderUpdateForm(forms.ModelForm):
         model = Order
         fields = ['status']
 
+
 class AddToCartForm(forms.Form):
     """Форма для добавления товара в корзину."""
+
     component_type = forms.ChoiceField(
         choices=[
             ('cpu', 'Процессор'),
@@ -35,7 +38,12 @@ class AddToCartForm(forms.Form):
             ('build', 'Сборка'),
         ],
         widget=forms.Select(attrs={'class': 'form-control'}),
-        label="Тип компонента"
+        label="Тип компонента",
     )
     component_id = forms.IntegerField(widget=forms.HiddenInput())  # ID компонента или сборки
-    quantity = forms.IntegerField(min_value=1, initial=1, widget=forms.NumberInput(attrs={'class': 'form-control'}), label="Количество")
+    quantity = forms.IntegerField(
+        min_value=1,
+        initial=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Количество",
+    )

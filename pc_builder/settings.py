@@ -1,7 +1,8 @@
-#settings.py - просто нужно будет подставить всё нужное под мой проект.
+# pc_builder/settings.py
 from pathlib import Path
 import os
 import sys
+
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -33,8 +34,7 @@ load_dotenv()
 """
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
-DEBUG = True
-  # В production должно быть False
+DEBUG = True  # В production должно быть False
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '188.225.120.28']  # Замени на свой IP
 
 # Application definition
@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'users',
     'fps_data',
     'debug_toolbar',
-    
 ]
 
 MIDDLEWARE = [
@@ -62,7 +61,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-     # **Убедитесь, что он здесь**
+    # **Убедитесь, что он здесь**
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -72,7 +71,6 @@ MIDDLEWARE = [
 ]
 
 # settings.py
-
 ROOT_URLCONF = 'pc_builder.urls'  # Убедись, что это правильно!
 
 import os
@@ -109,10 +107,14 @@ DATABASES = {
         'HOST': os.getenv('DJANGO_DATABASE_HOST'),
         'PORT': os.getenv('DJANGO_DATABASE_PORT', ''),
         'OPTIONS': {
-            'driver': os.getenv('DJANGO_DATABASE_OPTIONS_DRIVER', 'ODBC Driver 17 for SQL Server'),
+            'driver': os.getenv(
+                'DJANGO_DATABASE_OPTIONS_DRIVER', 'ODBC Driver 17 for SQL Server'
+            ),
             'TrustServerCertificate': 'yes',
             'Encrypt': 'optional',
-            'instance': os.getenv('DJANGO_DATABASE_OPTIONS_INSTANCE', 'SQLEXPRESS'),
+            'instance': os.getenv(
+                'DJANGO_DATABASE_OPTIONS_INSTANCE', 'SQLEXPRESS'
+            ),
         },
     }
 }
@@ -136,7 +138,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 LANGUAGE_CODE = 'ru-RU'  # Или 'ru'
 USE_I18N = True
-USE_L10N = True # Рекомендуется True для локализации
+USE_L10N = True  # Рекомендуется True для локализации
 TIME_ZONE = 'Europe/Moscow'  # Ваш часовой пояс  # Или ваш часовой пояс, например 'Europe/Moscow'
 
 INTERNAL_IPS = [
@@ -161,7 +163,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Путь к папке для с
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # settings.py
-LOGIN_URL = 'users:login' #  Используем имя URL из urls.py приложения users
+LOGIN_URL = 'users:login'  # Используем имя URL из urls.py приложения users
 LOGIN_REDIRECT_URL = '/'  # Или другое значение
 AUTH_USER_MODEL = 'auth.User'
 # settings.py
@@ -171,13 +173,14 @@ AUTH_USER_MODEL = 'auth.User'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'  # Хост Yandex.Mail
 EMAIL_PORT = 465  # Порт для SSL (465) или 587 для TLS
-EMAIL_USE_TLS = False #  Используйте False для SSL, True для TLS
-EMAIL_USE_SSL = True # Используйте True для SSL, False для TLS
+EMAIL_USE_TLS = False  # Используйте False для SSL, True для TLS
+EMAIL_USE_SSL = True  # Используйте True для SSL, False для TLS
 EMAIL_HOST_USER = 'niaz123rezeda123@ya.ru'  # Ваш адрес электронной почты Yandex
 EMAIL_HOST_PASSWORD = 'qmcexvaqscmgaiey'  # Пароль от вашей почты Yandex
 DEFAULT_FROM_EMAIL = 'niaz123rezeda123@ya.ru'  # От кого будут отправляться письма (ваш адрес)
 DEFAULT_CHARSET = 'utf-8'  # или 'utf-8'
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Пример
@@ -188,6 +191,7 @@ CACHES = {
 }
 try:
     from django.core.cache import cache
+
     cache.get('test_cache_connection')
 except Exception as e:
     logger.error(f"Redis connection error: {e}")
@@ -228,15 +232,16 @@ CACHE_MIDDLEWARE_KEY_PREFIX = ""  # Префикс для ключей кэша 
 Этот скрипт предназначен для создания базы данных MS SQL Server, если она не существует.
 Он использует параметры подключения, указанные в файле .env.
 """
-print ("СТАРТ")
+print("СТАРТ")
 import os
 import pyodbc
 from dotenv import load_dotenv
 
+
 def create_database():
     """
     Создает базу данных MS SQL Server, если она не существует.
-    
+
     Считывает параметры подключения из переменных окружения, загруженных из .env файла.
     Проверяет, существует ли база данных с указанным именем, и, если нет, создает ее.
     """
@@ -251,7 +256,9 @@ def create_database():
         print("Ошибка: Не все необходимые переменные окружения установлены.")
         return
 
-    connection_string = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={db_host};UID={db_user};PWD={db_password}'
+    connection_string = (
+        f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={db_host};UID={db_user};PWD={db_password}'
+    )
     cnxn = None
 
     try:
@@ -277,22 +284,22 @@ def create_database():
         if cnxn:
             cnxn.close()
 
+
 if __name__ == "__main__":
     create_database()
 
 
 CACHE_MIDDLEWARE_IGNORE_PATHS = [
-    
-    '/builds/cart/',           # Страница корзины
-    '/builds/add_to_cart/',      # Добавление в корзину
-    '/builds/remove_from_cart/', # Удаление из корзины
-    '/users/login/',            # Страница логина
-    '/users/logout/',           # Страница выхода
-    '/users/register/',         # Страница регистрации
+    '/builds/cart/',  # Страница корзины
+    '/builds/add_to_cart/',  # Добавление в корзину
+    '/builds/remove_from_cart/',  # Удаление из корзины
+    '/users/login/',  # Страница логина
+    '/users/logout/',  # Страница выхода
+    '/users/register/',  # Страница регистрации
     '/components/stock_list/',
     '/builds/checkout/',
     '/builds/employee_order_list/',
-        # Добавьте это!  Убедитесь, что URL правильный
+    # Добавьте это!  Убедитесь, что URL правильный
     # ... другие URL-адреса, связанные с пользователем ...
 ]
 

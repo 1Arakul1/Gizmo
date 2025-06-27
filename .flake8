@@ -1,12 +1,12 @@
 [flake8]
+max-line-length = 120
+exclude = .git,__pycache__,docs,env,venv,*migrations*,manage.py
+select = B,C,E,F,W,T4,B9
 ignore =
+    E203,
     E501,
     W503,
-    
-    F401
-max-line-length = 120
-exclude =
-    .git,
-    __pycache__,
-    migrations,
-    venv
+    C812,
+    B008
+per-file-ignores =
+    */__init__.py:F401

@@ -10,5 +10,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('profile/', views.profile, name='profile'),
     path('password_reset/', views.password_reset, name='password_reset'),
-    path('return_request/<int:order_item_id>/', views.create_return_request, name='create_return_request'), # Добавляем url
+    path('return_request/<int:order_item_id>/', views.create_return_request, name='create_return_request'),
 ]

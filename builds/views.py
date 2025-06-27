@@ -1,62 +1,94 @@
-#builds\views.py
+# builds/views.py
+import json
+import logging
 from decimal import Decimal
-from django.shortcuts import render
-from django.views.decorators.cache import cache_page
+
 from django.conf import settings
-from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.sessions.models import Session
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    ValidationError,
+)
+from django.core.mail import send_mail
+from django.core.paginator import (
+    EmptyPage,
+    PageNotAnInteger,
+    Paginator,
+)
+from django.db import transaction
+from django.db.models import Q
+from django.http import (
+    Http404,
+    JsonResponse,
+)
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+
 from django.urls import reverse
 from django.utils import timezone
-from django.http import JsonResponse
-from django.core.mail import send_mail
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ValidationError
+
 from django.views.decorators.http import require_POST
-from django.db.models import Q, F
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import Http404
-from django.contrib import messages
-import logging
-from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Q
-from .models import Build, CartItem, Order, OrderItem
-from components.models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler
-from .forms import AddToCartForm, OrderUpdateForm
-from django.contrib import messages
-from django.db import transaction  # Import transaction
-from django.contrib.sessions.models import Session
-from django.core.cache import cache
-from .models import Order, ReturnRequest  # Убедитесь, что импортированы необходимые модели
-from django.core.paginator import Paginator
-from django.db import models # Импортируем models
-from django.contrib.auth.models import User
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from users.utils import send_order_status_email 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import Q
-from .models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Build
-from decimal import Decimal
-from django.http import JsonResponse
+
+
+from .forms import OrderUpdateForm
+from .models import (
+    Build,
+    CartItem,
+    Order,
+    OrderItem,
+    ReturnRequest,
+)
+from components.models import (
+    CPU,
+    GPU,
+    Motherboard,
+    RAM,
+    Storage,
+    PSU,
+    Case,
+    Cooler,
+)
+from users.utils import send_order_status_email
+
+logger = logging.getLogger(__name__)
+
 
 def employee_check(user):
     """Проверяет, является ли пользователь сотрудником (имеет ли права персонала)."""
     return user.is_staff
 
+
 @user_passes_test(employee_check)
 def employee_return_requests(request):
     """Отображает список запросов на возврат для сотрудников."""
-    return_requests = ReturnRequest.objects.all().order_by('-request_date')  # Все запросы, отсортированные по дате
+    return_requests = (
+        ReturnRequest.objects.all().order_by('-request_date')
+    )  # Все запросы, отсортированные по дате
     paginator = Paginator(return_requests, 10)  # 10 запросов на страницу
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
     context = {'page_obj': page_obj}
     return render(request, 'builds/employee_return_requests.html', context)
+
 
 def is_employee(user):
     """Проверяет, является ли пользователь сотрудником."""
     return user.is_staff  # Пример: используем поле is_staff
     # Или ваша логика определения сотрудника
+
+
 @login_required
 @user_passes_test(is_employee)
 def employee_process_return(request, return_request_id):
@@ -70,13 +102,17 @@ def employee_process_return(request, return_request_id):
         return_request.status = status
         return_request.comment = comment
         return_request.save()
-        messages.success(request, "Статус возврата успешно обновлен.")  # Добавлено сообщение об успехе
-        return redirect('builds:employee_order_history') # Редирект на employee_order_history
+        messages.success(
+            request, "Статус возврата успешно обновлен."
+        )  # Добавлено сообщение об успехе
+        return redirect('builds:employee_order_history')  # Редирект на employee_order_history
 
-    context = {'return_request': return_request, 'status_choices': ReturnRequest.STATUS_CHOICES}
+    context = {
+        'return_request': return_request,
+        'status_choices': ReturnRequest.STATUS_CHOICES,
+    }
     return render(request, 'builds/employee_process_return.html', context)
 
-logger = logging.getLogger(__name__)
 
 class VaryCookieMiddleware:
     def __init__(self, get_response):
@@ -105,20 +141,26 @@ def get_cart_context(request):
 def cart_view(request):
     """Просмотр корзины."""
     logger.info(f"User in cart_view: {request.user}")
-    print(f"Cart items in cart_view: {CartItem.objects.filter(user=request.user)}")
+    print(
+        f"Cart items in cart_view: {CartItem.objects.filter(user=request.user)}"
+    )
 
     # Получаем текущую сессию, блокируя ее для обновления
     try:
         with transaction.atomic():
-            session = Session.objects.select_for_update().get(session_key=request.session.session_key)
+            Session.objects.select_for_update().get(
+                session_key=request.session.session_key
+            )
             cart_items = CartItem.objects.filter(user=request.user)
             total_price = sum(item.get_total_price() for item in cart_items)
             context = {'cart_items': cart_items, 'total_price': total_price}
             response = render(request, 'builds/cart.html', context)  # Сохраняем response
-            response['Cache-Control'] = 'private, no-cache, no-store, must-revalidate'  # Добавляем заголовки
+            response['Cache-Control'] = (
+                'private, no-cache, no-store, must-revalidate'
+            )  # Добавляем заголовки
             response['Pragma'] = 'no-cache'
             response['Expires'] = '0'
-            return response # Возвращаем response
+            return response  # Возвращаем response
     except Session.DoesNotExist:
         context = {'cart_items': [], 'total_price': 0}
         return render(request, 'builds/cart.html', context)
@@ -134,10 +176,16 @@ def add_to_cart(request):
         component_id = request.POST.get('component_id')
         quantity = request.POST.get('quantity', '1')
 
-        logger.debug(f"Received data: component_type={component_type}, component_id={component_id}, quantity={quantity}")
+        logger.debug(
+            f"Received data: component_type={component_type}, "
+            f"component_id={component_id}, quantity={quantity}"
+        )
 
         if not component_type or not component_id:
-            error_response = {'success': False, 'error': 'Не указан тип или ID товара'}
+            error_response = {
+                'success': False,
+                'error': 'Не указан тип или ID товара',
+            }
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse(error_response, status=400)
             else:
@@ -149,7 +197,10 @@ def add_to_cart(request):
                 quantity = 1
             component_id = int(component_id)
         except ValueError:
-            error_response = {'success': False, 'error': 'Неверное количество'}
+            error_response = {
+                'success': False,
+                'error': 'Неверное количество',
+            }
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse(error_response, status=400)
             else:
@@ -163,10 +214,20 @@ def add_to_cart(request):
                 cart_item, created = CartItem.objects.get_or_create(
                     user=request.user,
                     build=component,
-                    cpu=None, gpu=None, motherboard=None, ram=None, storage=None, psu=None, case=None, cooler=None
+                    cpu=None,
+                    gpu=None,
+                    motherboard=None,
+                    ram=None,
+                    storage=None,
+                    psu=None,
+                    case=None,
+                    cooler=None,
                 )
             except Build.DoesNotExist:
-                error_response = {'success': False, 'error': 'Сборка не найдена'}
+                error_response = {
+                    'success': False,
+                    'error': 'Сборка не найдена',
+                }
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse(error_response, status=404)
                 else:
@@ -187,7 +248,10 @@ def add_to_cart(request):
             component_model = component_models.get(component_type)
 
             if not component_model:
-                error_response = {'success': False, 'error': 'Неверный тип товара'}
+                error_response = {
+                    'success': False,
+                    'error': 'Неверный тип товара',
+                }
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse(error_response, status=400)
                 else:
@@ -196,7 +260,10 @@ def add_to_cart(request):
             try:
                 component = component_model.objects.get(pk=component_id)
             except component_model.DoesNotExist:
-                error_response = {'success': False, 'error': 'Товар не найден'}
+                error_response = {
+                    'success': False,
+                    'error': 'Товар не найден',
+                }
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse(error_response, status=404)
                 else:
@@ -207,7 +274,9 @@ def add_to_cart(request):
                 build=None,
                 cpu=component if component_type == 'cpu' else None,
                 gpu=component if component_type == 'gpu' else None,
-                motherboard=component if component_type == 'motherboard' else None,
+                motherboard=component
+                if component_type == 'motherboard'
+                else None,
                 ram=component if component_type == 'ram' else None,
                 storage=component if component_type == 'storage' else None,
                 psu=component if component_type == 'psu' else None,
@@ -224,7 +293,15 @@ def add_to_cart(request):
 
         cart_item.save()
 
-        print(f"CartItem saved: {cart_item.id}, quantity: {cart_item.quantity}, component_type: {component_type}, component_id: {component_id}")
+        print(
+            "CartItem saved: {}, quantity: {}, component_type: {}, "
+            "component_id: {}".format(
+                cart_item.id,
+                cart_item.quantity,
+                component_type,
+                component_id,
+            )
+        )
         logger.info(f"CartItem saved: ID={cart_item.id}, quantity={cart_item.quantity}")
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -245,18 +322,6 @@ def remove_from_cart(request, item_id):
     return redirect('builds:cart')
 
 
-@login_required
-def remove_from_cart(request, item_id):
-    """Удаление товара из корзины."""
-    try:
-        cart_item = get_object_or_404(CartItem, pk=item_id, user=request.user)
-        cart_item.delete()
-        messages.success(request, "Товар успешно удален из корзины.")
-    except Http404:
-        messages.error(request, "Товар не найден в корзине.")
-    return redirect('builds:cart')
-
-# -----------------  Остальной код views.py ----------------------
 def build_list(request):
     builds_list = Build.objects.all().order_by('id')
     paginator = Paginator(builds_list, 6)
@@ -284,7 +349,7 @@ def build_detail(request, pk):
     cart_context = get_cart_context(request)  # добавляем корзину в контекст
     context = {
         'build': build,
-        **cart_context  # Распаковываем cart_context (cart_items, total_price)
+        **cart_context,  # Распаковываем cart_context (cart_items, total_price)
     }
     return render(request, 'builds/build_detail.html', context)
 
@@ -305,19 +370,32 @@ def build_create(request):
         try:
             cpu = get_object_or_404(CPU, pk=cpu_id) if cpu_id else None
             gpu = get_object_or_404(GPU, pk=gpu_id) if gpu_id else None
-            motherboard = get_object_or_404(Motherboard, pk=motherboard_id) if motherboard_id else None
+            motherboard = (
+                get_object_or_404(Motherboard, pk=motherboard_id)
+                if motherboard_id
+                else None
+            )
             ram = get_object_or_404(RAM, pk=ram_id) if ram_id else None
             storage = get_object_or_404(Storage, pk=storage_id) if storage_id else None
             psu = get_object_or_404(PSU, pk=psu_id) if psu_id else None
             case = get_object_or_404(Case, pk=case_id) if case_id else None
             cooler = get_object_or_404(Cooler, pk=cooler_id) if cooler_id else None
         except (ValueError, TypeError, ObjectDoesNotExist):
-            return render(request, 'builds/build_create.html',
-                          {'error_message': 'Один из выбранных компонентов не найден.',
-                           'cpus': CPU.objects.all(), 'gpus': GPU.objects.all(),
-                           'motherboards': Motherboard.objects.all(), 'rams': RAM.objects.all(),
-                           'storages': Storage.objects.all(), 'psus': PSU.objects.all(),
-                           'cases': Case.objects.all(), 'coolers': Cooler.objects.all()})
+            return render(
+                request,
+                'builds/build_create.html',
+                {
+                    'error_message': 'Один из выбранных компонентов не найден.',
+                    'cpus': CPU.objects.all(),
+                    'gpus': GPU.objects.all(),
+                    'motherboards': Motherboard.objects.all(),
+                    'rams': RAM.objects.all(),
+                    'storages': Storage.objects.all(),
+                    'psus': PSU.objects.all(),
+                    'cases': Case.objects.all(),
+                    'coolers': Cooler.objects.all(),
+                },
+            )
 
         # Проверки совместимости
         error_message = None
@@ -339,27 +417,69 @@ def build_create(request):
                 error_message = 'Кулер не совместим с процессором.'
 
         if error_message:
-            return render(request, 'builds/build_create.html',
-                          {'error_message': error_message,
-                           'cpus': CPU.objects.all(), 'gpus': GPU.objects.all(),
-                           'motherboards': Motherboard.objects.all(), 'rams': RAM.objects.all(),
-                           'storages': Storage.objects.all(), 'psus': PSU.objects.all(),
-                           'cases': Case.objects.all(), 'coolers': Cooler.objects.all()})
+            return render(
+                request,
+                'builds/build_create.html',
+                {
+                    'error_message': error_message,
+                    'cpus': CPU.objects.all(),
+                    'gpus': GPU.objects.all(),
+                    'motherboards': Motherboard.objects.all(),
+                    'rams': RAM.objects.all(),
+                    'storages': Storage.objects.all(),
+                    'psus': PSU.objects.all(),
+                    'cases': Case.objects.all(),
+                    'coolers': Cooler.objects.all(),
+                },
+            )
 
         # Создаем сборку
-        total_price = sum(component.price for component in [cpu, gpu, motherboard, ram, storage, psu, case, cooler] if component and component.price is not None)
+        total_price = sum(
+            component.price
+            for component in [
+                cpu,
+                gpu,
+                motherboard,
+                ram,
+                storage,
+                psu,
+                case,
+                cooler,
+            ]
+            if component and component.price is not None
+        )
 
-        build = Build(user=request.user, cpu=cpu, gpu=gpu, motherboard=motherboard, ram=ram, storage=storage, psu=psu, case=case, cooler=cooler, total_price=total_price)
+        build = Build(
+            user=request.user,
+            cpu=cpu,
+            gpu=gpu,
+            motherboard=motherboard,
+            ram=ram,
+            storage=storage,
+            psu=psu,
+            case=case,
+            cooler=cooler,
+            total_price=total_price,
+        )
         try:
             build.save()
             return redirect('builds:build_detail', pk=build.pk)
         except ValidationError as e:
-            return render(request, 'builds/build_create.html',
-                          {'error_message': f'Ошибка сохранения сборки: {e}',
-                           'cpus': CPU.objects.all(), 'gpus': GPU.objects.all(),
-                           'motherboards': Motherboard.objects.all(), 'rams': RAM.objects.all(),
-                           'storages': Storage.objects.all(), 'psus': PSU.objects.all(),
-                           'cases': Case.objects.all(), 'coolers': Cooler.objects.all()})
+            return render(
+                request,
+                'builds/build_create.html',
+                {
+                    'error_message': f'Ошибка сохранения сборки: {e}',
+                    'cpus': CPU.objects.all(),
+                    'gpus': GPU.objects.all(),
+                    'motherboards': Motherboard.objects.all(),
+                    'rams': RAM.objects.all(),
+                    'storages': Storage.objects.all(),
+                    'psus': PSU.objects.all(),
+                    'cases': Case.objects.all(),
+                    'coolers': Cooler.objects.all(),
+                },
+            )
 
     else:
         cpus = CPU.objects.all()
@@ -370,12 +490,18 @@ def build_create(request):
         psus = PSU.objects.all()
         cases = Case.objects.all()
         coolers = Cooler.objects.all()
-        context = {'cpus': cpus, 'gpus': gpus, 'motherboards': motherboards, 'rams': rams, 'storages': storages, 'psus': psus, 'cases': cases, 'coolers': coolers}
+        context = {
+            'cpus': cpus,
+            'gpus': gpus,
+            'motherboards': motherboards,
+            'rams': rams,
+            'storages': storages,
+            'psus': psus,
+            'cases': cases,
+            'coolers': coolers,
+        }
         return render(request, 'builds/build_create.html', context)
 
-
-import json
-from django.views.decorators.csrf import csrf_exempt
 
 def build_preview(request):
     if request.method == 'POST':
@@ -396,7 +522,11 @@ def build_preview(request):
         try:
             cpu = CPU.objects.get(pk=cpu_id) if cpu_id else None
             gpu = GPU.objects.get(pk=gpu_id) if gpu_id else None
-            motherboard = Motherboard.objects.get(pk=motherboard_id) if motherboard_id else None
+            motherboard = (
+                Motherboard.objects.get(pk=motherboard_id)
+                if motherboard_id
+                else None
+            )
             ram = RAM.objects.get(pk=ram_id) if ram_id else None
             storage = Storage.objects.get(pk=storage_id) if storage_id else None
             psu = PSU.objects.get(pk=psu_id) if psu_id else None
@@ -407,10 +537,18 @@ def build_preview(request):
 
         error_message = None
 
-        if cpu and motherboard and not cpu.is_compatible_with_motherboard(motherboard):
+        if (
+            cpu
+            and motherboard
+            and not cpu.is_compatible_with_motherboard(motherboard)
+        ):
             error_message = 'Процессор не совместим с материнской платой.'
 
-        if motherboard and ram and not motherboard.is_compatible_with_ram(ram):
+        if (
+            motherboard
+            and ram
+            and not motherboard.is_compatible_with_ram(ram)
+        ):
             error_message = 'Оперативная память не совместима с материнской платой.'
 
         if gpu and psu and not psu.is_sufficient_for_gpu(gpu):
@@ -420,7 +558,8 @@ def build_preview(request):
             error_message = 'Кулер не совместим с процессором.'
 
         total_price = sum(
-            c.price for c in [cpu, gpu, motherboard, ram, storage, psu, case, cooler]
+            c.price
+            for c in [cpu, gpu, motherboard, ram, storage, psu, case, cooler]
             if c and c.price is not None
         )
 
@@ -436,7 +575,10 @@ def build_preview(request):
             'total_price': total_price,
             'error_message': error_message,
         }
-        html = render(request, 'builds/build_preview.html', context).content.decode('utf-8')
+        html = (
+            render(request, 'builds/build_preview.html', context)
+            .content.decode('utf-8')
+        )
 
         return JsonResponse({'html': html})
 
@@ -461,25 +603,42 @@ def build_edit(request, pk):
         try:
             cpu = CPU.objects.get(pk=cpu_id) if cpu_id else None
             gpu = GPU.objects.get(pk=gpu_id) if gpu_id else None
-            motherboard = Motherboard.objects.get(pk=motherboard_id) if motherboard_id else None
+            motherboard = (
+                Motherboard.objects.get(pk=motherboard_id)
+                if motherboard_id
+                else None
+            )
             ram = RAM.objects.get(pk=ram_id) if ram_id else None
             storage = Storage.objects.get(pk=storage_id) if storage_id else None
             psu = PSU.objects.get(pk=psu_id) if psu_id else None
             case = Case.objects.get(pk=case_id) if case_id else None
             cooler = Cooler.objects.get(pk=cooler_id) if cooler_id else None
-        except (CPU.DoesNotExist, GPU.DoesNotExist, Motherboard.DoesNotExist, RAM.DoesNotExist, Storage.DoesNotExist, PSU.DoesNotExist, Case.DoesNotExist, Cooler.DoesNotExist):
-            return render(request, 'builds/build_edit.html', {
-                'build': build,
-                'error_message': 'Один из выбранных компонентов не найден.',
-                'cpus': CPU.objects.all(),
-                'gpus': GPU.objects.all(),
-                'motherboards': Motherboard.objects.all(),
-                'rams': RAM.objects.all(),
-                'storages': Storage.objects.all(),
-                'psus': PSU.objects.all(),
-                'cases': Case.objects.all(),
-                'coolers': Cooler.objects.all(), # Добавляем coolers
-            })
+        except (
+            CPU.DoesNotExist,
+            GPU.DoesNotExist,
+            Motherboard.DoesNotExist,
+            RAM.DoesNotExist,
+            Storage.DoesNotExist,
+            PSU.DoesNotExist,
+            Case.DoesNotExist,
+            Cooler.DoesNotExist,
+        ):
+            return render(
+                request,
+                'builds/build_edit.html',
+                {
+                    'build': build,
+                    'error_message': 'Один из выбранных компонентов не найден.',
+                    'cpus': CPU.objects.all(),
+                    'gpus': GPU.objects.all(),
+                    'motherboards': Motherboard.objects.all(),
+                    'rams': RAM.objects.all(),
+                    'storages': Storage.objects.all(),
+                    'psus': PSU.objects.all(),
+                    'cases': Case.objects.all(),
+                    'coolers': Cooler.objects.all(),  # Добавляем coolers
+                },
+            )
         error_message = None
 
         if cpu and motherboard:
@@ -499,18 +658,22 @@ def build_edit(request, pk):
                 error_message = 'Кулер не совместим с процессором.'
 
         if error_message:
-            return render(request, 'builds/build_edit.html', {
-                'build': build,
-                'error_message': error_message,
-                'cpus': CPU.objects.all(),
-                'gpus': GPU.objects.all(),
-                'motherboards': Motherboard.objects.all(),
-                'rams': RAM.objects.all(),
-                'storages': Storage.objects.all(),
-                'psus': PSU.objects.all(),
-                'cases': Case.objects.all(),
-                'coolers': Cooler.objects.all(),  # Добавляем coolers
-            })
+            return render(
+                request,
+                'builds/build_edit.html',
+                {
+                    'build': build,
+                    'error_message': error_message,
+                    'cpus': CPU.objects.all(),
+                    'gpus': GPU.objects.all(),
+                    'motherboards': Motherboard.objects.all(),
+                    'rams': RAM.objects.all(),
+                    'storages': Storage.objects.all(),
+                    'psus': PSU.objects.all(),
+                    'cases': Case.objects.all(),
+                    'coolers': Cooler.objects.all(),  # Добавляем coolers
+                },
+            )
 
         #  Обновление полей build
         build.cpu = cpu
@@ -520,7 +683,7 @@ def build_edit(request, pk):
         build.storage = storage
         build.psu = psu
         build.case = case
-        build.cooler = cooler # Добавлено обновление кулера
+        build.cooler = cooler  # Добавлено обновление кулера
 
         # Рассчитываем общую стоимость
         total_price = Decimal('0.0')
@@ -546,18 +709,22 @@ def build_edit(request, pk):
             build.save()
             return redirect('builds:build_detail', pk=build.pk)
         except ValidationError as e:
-            return render(request, 'builds/build_edit.html', {
-                'build': build,
-                'error_message': f'Ошибка сохранения сборки: {e}',
-                'cpus': CPU.objects.all(),
-                'gpus': GPU.objects.all(),
-                'motherboards': Motherboard.objects.all(),
-                'rams': RAM.objects.all(),
-                'storages': Storage.objects.all(),
-                'psus': PSU.objects.all(),
-                'cases': Case.objects.all(),
-                'coolers': Cooler.objects.all(),  # Добавляем coolers
-            })
+            return render(
+                request,
+                'builds/build_edit.html',
+                {
+                    'build': build,
+                    'error_message': f'Ошибка сохранения сборки: {e}',
+                    'cpus': CPU.objects.all(),
+                    'gpus': GPU.objects.all(),
+                    'motherboards': Motherboard.objects.all(),
+                    'rams': RAM.objects.all(),
+                    'storages': Storage.objects.all(),
+                    'psus': PSU.objects.all(),
+                    'cases': Case.objects.all(),
+                    'coolers': Cooler.objects.all(),  # Добавляем coolers
+                },
+            )
 
     else:
         # Отобразите форму с текущими значениями
@@ -592,8 +759,6 @@ class CustomOrderUpdateForm(OrderUpdateForm):
         self.fields['status'].choices = status_choices  # Задаём в конструкторе
 
 
-
-
 @login_required
 @user_passes_test(is_employee)
 def employee_order_list(request):
@@ -604,10 +769,11 @@ def employee_order_list(request):
 
     if query:
         orders = Order.objects.filter(
-            Q(is_completed=False) & (
-                Q(track_number__icontains=query) |
-                Q(user__username__icontains=query) |
-                Q(email__icontains=query)
+            Q(is_completed=False)
+            & (
+                Q(track_number__icontains=query)
+                | Q(user__username__icontains=query)
+                | Q(email__icontains=query)
             )
         ).order_by('-order_date')
     else:
@@ -624,12 +790,18 @@ def employee_order_list(request):
         page_obj = paginator.page(paginator.num_pages)
 
     # Получаем количество запросов на возврат
-    return_request_count = ReturnRequest.objects.filter(status='pending').count()  # Учитываем только "pending"
+    return_request_count = ReturnRequest.objects.filter(
+        status='pending'
+    ).count()  # Учитываем только "pending"
 
     return render(
         request,
         'builds/employee_order_list.html',
-        {'page_obj': page_obj, 'query': query, 'return_request_count': return_request_count}  # Добавляем return_request_count
+        {
+            'page_obj': page_obj,
+            'query': query,
+            'return_request_count': return_request_count,
+        },  # Добавляем return_request_count
     )
 
 
@@ -649,7 +821,10 @@ def employee_order_update(request, order_id):
             ('confirmed', 'Заказ подтверждён'),
             ('assembling', 'Заказ собирается'),
             ('delivery_prep', 'Заказ готовится к доставке'),
-            ('delivering', 'Заказ будет доставлен вам в течении 3 часов'),
+            (
+                'delivering',
+                'Заказ будет доставлен вам в течении 3 часов',
+            ),
             ('completed', 'Заказ выполнен'),
         ]
     else:  # Самовывоз или другой способ доставки
@@ -661,7 +836,9 @@ def employee_order_update(request, order_id):
         ]
 
     if request.method == 'POST':
-        form = CustomOrderUpdateForm(request.POST, instance=order, status_choices=status_choices)
+        form = CustomOrderUpdateForm(
+            request.POST, instance=order, status_choices=status_choices
+        )
         if form.is_valid():
             old_status = order.status  # Сохраняем старый статус для сравнения
             form.save()  # Сохраняем изменения в заказе
@@ -676,12 +853,12 @@ def employee_order_update(request, order_id):
     else:
         form = CustomOrderUpdateForm(instance=order, status_choices=status_choices)
 
-    return render(request, 'builds/employee_order_update.html', {'form': form, 'order': order})
+    return render(
+        request,
+        'builds/employee_order_update.html',
+        {'form': form, 'order': order},
+    )
 
-from django.core.cache import cache
-import logging
-
-logger = logging.getLogger(__name__)
 
 @login_required
 @user_passes_test(is_employee)
@@ -691,15 +868,14 @@ def employee_order_complete(request, order_id):
     order.status = 'completed'
     order.save()
 
-    logger.info(f"Order {order.pk} status after update: {order.status}, is_completed: {order.is_completed}")
+    logger.info(
+        f"Order {order.pk} status after update: {order.status}, "
+        f"is_completed: {order.is_completed}"
+    )
 
-    
     messages.success(request, f"Заказ #{order.pk} отмечен как выданный.")
     return redirect('builds:employee_order_list')
 
-
-def employee_check(user):
-    return user.is_staff
 
 @login_required
 @user_passes_test(is_employee)
@@ -707,15 +883,24 @@ def employee_order_history(request):
     """Отображает историю выданных заказов с информацией о возвратах."""
     query = request.GET.get('q')
     if query:
-        orders = Order.objects.filter(
-            Q(is_completed=True) & (
-                Q(track_number__icontains=query) |
-                Q(user__username__icontains=query) |
-                Q(email__icontains=query)
+        orders = (
+            Order.objects.filter(
+                Q(is_completed=True)
+                & (
+                    Q(track_number__icontains=query)
+                    | Q(user__username__icontains=query)
+                    | Q(email__icontains=query)
+                )
             )
-        ).order_by('-order_date').prefetch_related('return_request') # Оптимизация запроса
+            .order_by('-order_date')
+            .prefetch_related('return_request')  # Оптимизация запроса
+        )
     else:
-        orders = Order.objects.filter(is_completed=True).order_by('-order_date').prefetch_related('return_request') # Оптимизация запроса
+        orders = (
+            Order.objects.filter(is_completed=True)
+            .order_by('-order_date')
+            .prefetch_related('return_request')  # Оптимизация запроса
+        )
 
     # Пагинация
     paginator = Paginator(orders, 10)  # По 10 заказов на страницу
@@ -746,7 +931,11 @@ def checkout(request):
         # Валидация данных (здесь можно добавить более сложную валидацию)
         if not email or not delivery_option or not payment_method:
             messages.error(request, "Пожалуйста, заполните все поля.")
-            return render(request, 'builds/checkout.html', {'cart_items': cart_items, 'total_price': total_price})
+            return render(
+                request,
+                'builds/checkout.html',
+                {'cart_items': cart_items, 'total_price': total_price},
+            )
 
         # Создание заказа
         order = Order.objects.create(
@@ -756,10 +945,12 @@ def checkout(request):
             payment_method=payment_method,
             address=address,
             total_amount=total_price,
-            order_date=timezone.now()
+            order_date=timezone.now(),
         )
 
-        print(f"DEBUG: Order {order.pk}, status: '{order.status}' AFTER CREATION")  # Добавляем отладочный вывод
+        print(
+            f"DEBUG: Order {order.pk}, status: '{order.status}' AFTER CREATION"
+        )  # Добавляем отладочный вывод
 
         # Создание позиций заказа
         for item in cart_items:
@@ -808,7 +999,13 @@ def checkout(request):
 
         # Отправка уведомления по электронной почте
         subject = 'Ваш заказ оформлен!'
-        message = f'Спасибо за ваш заказ! \n\nСумма заказа: {total_price} ₽\nСпособ доставки: {order.delivery_option}\nСпособ оплаты: {order.payment_method}\nАдрес доставки: {order.address}\nВаш трек-номер: {order.track_number}'
+        message = (
+            f'Спасибо за ваш заказ! \n\nСумма заказа: {total_price} ₽\n'
+            f'Способ доставки: {order.delivery_option}\n'
+            f'Способ оплаты: {order.payment_method}\n'
+            f'Адрес доставки: {order.address}\n'
+            f'Ваш трек-номер: {order.track_number}'
+        )
         from_email = settings.EMAIL_HOST_USER
         recipient_list = [email]
 
@@ -816,37 +1013,55 @@ def checkout(request):
             send_mail(subject, message, from_email, recipient_list)
             success = True
         except Exception as e:
-            messages.error(request, f"Заказ оформлен, но не удалось отправить уведомление: {e}")
+            messages.error(
+                request, f"Заказ оформлен, но не удалось отправить уведомление: {e}"
+            )
             success = False
 
         # Перенаправление на страницу подтверждения с параметром в URL
         if success:
-            return redirect(reverse('builds:order_confirmation') + f'?success=True&track_number={order.track_number}')
+            return redirect(
+                reverse('builds:order_confirmation')
+                + f'?success=True&track_number={order.track_number}'
+            )
         else:
             return redirect(reverse('builds:order_confirmation') + '?success=False')
 
-    return render(request, 'builds/checkout.html', {'cart_items': cart_items, 'total_price': total_price})
+    return render(
+        request,
+        'builds/checkout.html',
+        {'cart_items': cart_items, 'total_price': total_price},
+    )
+
 
 @login_required
 def order_confirmation(request):
     success = request.GET.get('success')
     track_number = request.GET.get('track_number')
     if success == 'True':
-        messages.success(request, f"Заказ успешно оформлен! Проверьте вашу электронную почту. Ваш трек-номер: {track_number}")
+        messages.success(
+            request,
+            f"Заказ успешно оформлен! Проверьте вашу электронную почту. "
+            f"Ваш трек-номер: {track_number}",
+        )
     elif success == 'False':
-        messages.error(request, "Заказ оформлен, но не удалось отправить уведомление.")
+        messages.error(
+            request, "Заказ оформлен, но не удалось отправить уведомление."
+        )
 
-    return render(request, 'builds/order_confirmation.html', {'track_number': track_number})
+    return render(
+        request,
+        'builds/order_confirmation.html',
+        {'track_number': track_number},
+    )
 
 
 @login_required
 def my_orders(request):
-    orders = Order.objects.filter(user=request.user, is_completed=False).order_by('-order_date')  # Показывать только невыданные заказы
+    orders = Order.objects.filter(
+        user=request.user, is_completed=False
+    ).order_by('-order_date')  # Показывать только невыданные заказы
     return render(request, 'builds/my_orders.html', {'orders': orders})
-
-
-def is_employee(user):
-    return user.is_staff
 
 
 def index(request):
@@ -871,6 +1086,7 @@ def index(request):
     else:
         return render(request, 'pc_builder/index.html', context)
 
+
 def get_compatible_motherboards(request):
     """
     Возвращает JSON с материнскими платами, совместимыми с выбранным CPU.
@@ -880,8 +1096,13 @@ def get_compatible_motherboards(request):
         try:
             cpu = CPU.objects.get(pk=cpu_id)
             # Получаем материнские платы с тем же сокетом, что и у CPU
-            compatible_motherboards = Motherboard.objects.filter(socket=cpu.socket).values('id', 'name') # .values() для оптимизации
-            return JsonResponse(list(compatible_motherboards), safe=False) # Преобразуем QuerySet в список
+            compatible_motherboards = (
+                Motherboard.objects.filter(socket=cpu.socket)
+                .values('id', 'name')  # .values() для оптимизации
+            )
+            return JsonResponse(
+                list(compatible_motherboards), safe=False
+            )  # Преобразуем QuerySet в список
         except CPU.DoesNotExist:
             return JsonResponse({'error': 'CPU не найден'}, status=404)
     else:
@@ -897,10 +1118,13 @@ def get_compatible_rams(request):
         try:
             motherboard = Motherboard.objects.get(pk=motherboard_id)
             # Получаем RAM с тем же типом и поддерживаемой частотой, что и у материнской платы
-            compatible_rams = RAM.objects.filter(
-                ram_type=motherboard.ram_type,
-                memory_clock__lte=motherboard.max_ram_speed
-            ).values('id', 'name')
+            compatible_rams = (
+                RAM.objects.filter(
+                    ram_type=motherboard.ram_type,
+                    memory_clock__lte=motherboard.max_ram_speed,
+                )
+                .values('id', 'name')
+            )
             return JsonResponse(list(compatible_rams), safe=False)
         except Motherboard.DoesNotExist:
             return JsonResponse({'error': 'Motherboard не найдена'}, status=404)
@@ -917,7 +1141,10 @@ def get_compatible_cpu(request):
         try:
             motherboard = Motherboard.objects.get(pk=motherboard_id)
             # Получаем CPU с тем же сокетом, что и у материнской платы
-            compatible_cpus = CPU.objects.filter(socket=motherboard.socket).values('id', 'name')
+            compatible_cpus = (
+                CPU.objects.filter(socket=motherboard.socket)
+                .values('id', 'name')
+            )
             return JsonResponse(list(compatible_cpus), safe=False)
         except Motherboard.DoesNotExist:
             return JsonResponse({'error': 'Motherboard не найдена'}, status=404)

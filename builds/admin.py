@@ -1,20 +1,35 @@
 # builds/admin.py
-
 from django.contrib import admin
-from .models import Build, Order, OrderItem
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-# builds/admin.py
-from .models import Build, Order, OrderItem, CartItem # Добавьте CartItem сюда
+
+from .models import Build, Order, OrderItem  # CartItem больше не импортируется
 
 
 class UserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active')
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'is_staff',
+        'is_active',
+    )
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
-        (('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
-                                       'groups', 'user_permissions')}),
+        (
+            ('Permissions'),
+            {
+                'fields': (
+                    'is_active',
+                    'is_staff',
+                    'is_superuser',
+                    'groups',
+                    'user_permissions',
+                )
+            },
+        ),
         (('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
 
@@ -34,28 +49,50 @@ class OrderItemInline(admin.TabularInline):  # Или admin.StackedInline
         return False  # Запрещаем добавление новых элементов inline
 
 
-@admin.register(Order)  # Теперь используем декоратор
+@admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user', 'email', 'order_date', 'status', 'track_number', 'total_amount')  # Отображаемые поля
-    list_filter = ('status', 'order_date', 'user')  # Фильтры
-    search_fields = ('track_number', 'email', 'user__username')  # Поиск
-    date_hierarchy = 'order_date'  # Иерархия дат
+    list_display = (
+        'pk',
+        'user',
+        'email',
+        'order_date',
+        'status',
+        'track_number',
+        'total_amount',
+    )
+    list_filter = ('status', 'order_date', 'user')
+    search_fields = ('track_number', 'email', 'user__username')
+    date_hierarchy = 'order_date'
     inlines = [OrderItemInline]
-    readonly_fields = ('track_number', 'order_date', 'user', 'email', 'delivery_option', 'payment_method', 'address',
-                       'total_amount')  # Поля только для чтения
+    readonly_fields = (
+        'track_number',
+        'order_date',
+        'user',
+        'email',
+        'delivery_option',
+        'payment_method',
+        'address',
+        'total_amount',
+    )
     list_editable = ('status',)
     fieldsets = (
         ('Основная информация', {
-            'fields': ('user', 'email', 'delivery_option', 'payment_method', 'address', 'total_amount', 'order_date',
-                       'track_number')
+            'fields': (
+                'user',
+                'email',
+                'delivery_option',
+                'payment_method',
+                'address',
+                'total_amount',
+                'order_date',
+                'track_number',
+            )
         }),
-        ('Статус заказа', {
-            'fields': ('status',)
-        }),
+        ('Статус заказа', {'fields': ('status',)}),
     )
 
     def has_add_permission(self, request):
-        return False  # Запрещаем добавление новых заказов
+        return False
 
 
 @admin.register(Build)
