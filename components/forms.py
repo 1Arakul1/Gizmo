@@ -1,6 +1,5 @@
 # components/forms.py
 from django import forms
-
 from .models import (
     CPU,
     GPU,
@@ -14,11 +13,11 @@ from .models import (
     Review,
 )
 
-
+# Forms for the admin panel (creation/editing)
 class CPUForm(forms.ModelForm):
     class Meta:
         model = CPU
-        fields = '__all__'  # или перечислите поля явно: ['manufacturer', 'model', 'cores', 'frequency', 'tdp', 'price', 'socket', 'image']
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,7 +29,7 @@ class CPUForm(forms.ModelForm):
 class GPUForm(forms.ModelForm):
     class Meta:
         model = GPU
-        fields = '__all__'  # или перечислите поля явно
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,7 +41,7 @@ class GPUForm(forms.ModelForm):
 class MotherboardForm(forms.ModelForm):
     class Meta:
         model = Motherboard
-        fields = '__all__'  # или перечислите поля явно
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,7 +53,7 @@ class MotherboardForm(forms.ModelForm):
 class RAMForm(forms.ModelForm):
     class Meta:
         model = RAM
-        fields = '__all__'  # или перечислите поля явно
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,7 +65,7 @@ class RAMForm(forms.ModelForm):
 class StorageForm(forms.ModelForm):
     class Meta:
         model = Storage
-        fields = '__all__'  # или перечислите поля явно
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -78,7 +77,7 @@ class StorageForm(forms.ModelForm):
 class PSUForm(forms.ModelForm):
     class Meta:
         model = PSU
-        fields = '__all__'  # или перечислите поля явно
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -90,7 +89,7 @@ class PSUForm(forms.ModelForm):
 class CaseForm(forms.ModelForm):
     class Meta:
         model = Case
-        fields = '__all__'  # или перечислите поля явно
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,7 +101,7 @@ class CaseForm(forms.ModelForm):
 class CoolerForm(forms.ModelForm):
     class Meta:
         model = Cooler
-        fields = '__all__'  # или укажите поля
+        fields = '__all__'
         # ... (Настройка виджетов, если нужно) ...
 
     def __init__(self, *args, **kwargs):
@@ -111,6 +110,123 @@ class CoolerForm(forms.ModelForm):
             component_type='cooler'
         )  # Ограничение по производителю
 
+
+# Forms for searching
+class ComponentSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+
+
+class CPUSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='cpu'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    socket = forms.CharField(label="Сокет", required=False)
+    integrated_graphics = forms.BooleanField(
+        label="Интегрированное графическое ядро", required=False
+    )
+
+
+class GPUSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='gpu'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    memory = forms.IntegerField(label="Объем памяти (ГБ)", required=False)
+    interface = forms.CharField(label="Интерфейс", required=False)
+    ray_tracing = forms.BooleanField(
+        label="Поддержка Ray Tracing", required=False
+    )
+
+
+class MotherboardSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='motherboard'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    socket = forms.CharField(label="Сокет", required=False)
+    form_factor = forms.CharField(label="Форм-фактор", required=False)
+    wifi = forms.BooleanField(label="Wi-Fi", required=False)
+
+
+class RAMSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='ram'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    type = forms.CharField(label="Тип (DDR4, DDR5)", required=False)
+    capacity = forms.IntegerField(label="Объем (ГБ)", required=False)
+    rgb = forms.BooleanField(label="RGB подсветка", required=False)
+
+
+class StorageSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='storage'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    type = forms.CharField(label="Тип (SSD/HDD)", required=False)
+    capacity = forms.IntegerField(label="Объем (ГБ/ТБ)", required=False)
+    nvme = forms.BooleanField(label="NVMe Support", required=False)
+
+
+class PSUSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='psu'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    power = forms.IntegerField(label="Мощность (Вт)", required=False)
+    certification = forms.CharField(label="Сертификация", required=False)
+    modular = forms.BooleanField(label="Модульный", required=False)
+
+
+class CaseSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='case'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители",
+    )
+    form_factor = forms.CharField(label="Форм-фактор", required=False)
+    dimensions = forms.CharField(label="Размеры", required=False)
+    side_panel_window = forms.BooleanField(label="Боковое окно", required=False)
+
+
+# components/forms.py
+
+class CoolerSearchForm(forms.Form):
+    q = forms.CharField(label="Поиск", required=False)
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.filter(component_type='cooler'),
+        label="Производитель",
+        required=False,
+        empty_label="Все производители"  # Add this line
+    )
+    cooler_type = forms.ChoiceField(
+        label="Тип охлаждения",
+        required=False,
+        choices=Cooler.cooler_type.field.choices,
+    )
+    fan_size = forms.IntegerField(label="Размер вентилятора (мм)", required=False)
+    rgb = forms.BooleanField(label="RGB подсветка", required=False)
 
 class ReviewForm(forms.ModelForm):
     class Meta:

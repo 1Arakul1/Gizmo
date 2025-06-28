@@ -1,32 +1,50 @@
 # components/views.py
-from django.shortcuts import render, get_object_or_404, redirect
+# components/views.py
+
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Stock, Manufacturer
-from .forms import ReviewForm
-from django.contrib.contenttypes.models import ContentType  # Correct import
-
-
-class ComponentSearchForm(forms.Form):
-    q = forms.CharField(label="Поиск", required=False)
+from .forms import (
+    CPUSearchForm,
+    GPUSearchForm,
+    MotherboardSearchForm,
+    RAMSearchForm,
+    StorageSearchForm,
+    PSUSearchForm,
+    CaseSearchForm,
+    CoolerSearchForm,
+    ReviewForm
+)
+from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect  # Import all search forms
 
 
 def cpu_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = CPUSearchForm(request.GET)
     cpus_list = CPU.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        socket = form.cleaned_data.get('socket')
+        integrated_graphics = form.cleaned_data.get('integrated_graphics')
+
+        if q:
             cpus_list = cpus_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            cpus_list = cpus_list.filter(manufacturer=manufacturer)
+        if socket:
+            cpus_list = cpus_list.filter(socket__icontains=socket)
+        if integrated_graphics:
+            cpus_list = cpus_list.filter(
+                integrated_graphics=True
+            )  # Assuming you have this field in your CPU model
 
     paginator = Paginator(cpus_list, 6)
     page = request.GET.get('page')
@@ -37,26 +55,29 @@ def cpu_list(request):
     except EmptyPage:
         cpus = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/cpu_list.html', {'cpus': cpus, 'form': form, 'query': query})
-
-
-def cpu_detail(request, pk):
-    cpu = get_object_or_404(CPU, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/cpu_detail.html', {'cpu': cpu, 'review_form': review_form})
+    return render(request, 'components/cpu_list.html', {'cpus': cpus, 'form': form})
 
 
 def gpu_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = GPUSearchForm(request.GET)
     gpus_list = GPU.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        memory = form.cleaned_data.get('memory')
+        interface = form.cleaned_data.get('interface')
+
+        if q:
             gpus_list = gpus_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            gpus_list = gpus_list.filter(manufacturer=manufacturer)
+        if memory:
+            gpus_list = gpus_list.filter(memory=memory)
+        if interface:
+            gpus_list = gpus_list.filter(interface__icontains=interface)
 
     paginator = Paginator(gpus_list, 6)
     page = request.GET.get('page')
@@ -67,26 +88,29 @@ def gpu_list(request):
     except EmptyPage:
         gpus = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/gpu_list.html', {'gpus': gpus, 'form': form, 'query': query})
-
-
-def gpu_detail(request, pk):
-    gpu = get_object_or_404(GPU, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/gpu_detail.html', {'gpu': gpu, 'review_form': review_form})
+    return render(request, 'components/gpu_list.html', {'gpus': gpus, 'form': form})
 
 
 def motherboard_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = MotherboardSearchForm(request.GET)
     motherboards_list = Motherboard.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        socket = form.cleaned_data.get('socket')
+        form_factor = form.cleaned_data.get('form_factor')
+
+        if q:
             motherboards_list = motherboards_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            motherboards_list = motherboards_list.filter(manufacturer=manufacturer)
+        if socket:
+            motherboards_list = motherboards_list.filter(socket__icontains=socket)
+        if form_factor:
+            motherboards_list = motherboards_list.filter(form_factor__icontains=form_factor)
 
     paginator = Paginator(motherboards_list, 6)
     page = request.GET.get('page')
@@ -98,26 +122,29 @@ def motherboard_list(request):
         motherboards = paginator.page(paginator.num_pages)
 
     return render(request, 'components/motherboard_list.html',
-                  {'motherboards': motherboards, 'form': form, 'query': query})
-
-
-def motherboard_detail(request, pk):
-    motherboard = get_object_or_404(Motherboard, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/motherboard_detail.html', {'motherboard': motherboard, 'review_form': review_form})
+                  {'motherboards': motherboards, 'form': form})
 
 
 def ram_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = RAMSearchForm(request.GET)
     rams_list = RAM.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        type = form.cleaned_data.get('type')
+        capacity = form.cleaned_data.get('capacity')
+
+        if q:
             rams_list = rams_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            rams_list = rams_list.filter(manufacturer=manufacturer)
+        if type:
+            rams_list = rams_list.filter(type__icontains=type)
+        if capacity:
+            rams_list = rams_list.filter(capacity=capacity)
 
     paginator = Paginator(rams_list, 6)
     page = request.GET.get('page')
@@ -128,26 +155,29 @@ def ram_list(request):
     except EmptyPage:
         rams = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/ram_list.html', {'rams': rams, 'form': form, 'query': query})
-
-
-def ram_detail(request, pk):
-    ram = get_object_or_404(RAM, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/ram_detail.html', {'ram': ram, 'review_form': review_form})
+    return render(request, 'components/ram_list.html', {'rams': rams, 'form': form})
 
 
 def storage_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = StorageSearchForm(request.GET)
     storages_list = Storage.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        type = form.cleaned_data.get('type')
+        capacity = form.cleaned_data.get('capacity')
+
+        if q:
             storages_list = storages_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            storages_list = storages_list.filter(manufacturer=manufacturer)
+        if type:
+            storages_list = storages_list.filter(type__icontains=type)
+        if capacity:
+            storages_list = storages_list.filter(capacity=capacity)
 
     paginator = Paginator(storages_list, 6)
     page = request.GET.get('page')
@@ -158,26 +188,29 @@ def storage_list(request):
     except EmptyPage:
         storages = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/storage_list.html', {'storages': storages, 'form': form, 'query': query})
-
-
-def storage_detail(request, pk):
-    storage = get_object_or_404(Storage, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/storage_detail.html', {'storage': storage, 'review_form': review_form})
+    return render(request, 'components/storage_list.html', {'storages': storages, 'form': form})
 
 
 def psu_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = PSUSearchForm(request.GET)
     psus_list = PSU.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        power = form.cleaned_data.get('power')
+        certification = form.cleaned_data.get('certification')
+
+        if q:
             psus_list = psus_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            psus_list = psus_list.filter(manufacturer=manufacturer)
+        if power:
+            psus_list = psus_list.filter(power=power)
+        if certification:
+            psus_list = psus_list.filter(certification__icontains=certification)
 
     paginator = Paginator(psus_list, 6)
     page = request.GET.get('page')
@@ -188,26 +221,29 @@ def psu_list(request):
     except EmptyPage:
         psus = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/psu_list.html', {'psus': psus, 'form': form, 'query': query})
-
-
-def psu_detail(request, pk):
-    psu = get_object_or_404(PSU, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/psu_detail.html', {'psu': psu, 'review_form': review_form})
+    return render(request, 'components/psu_list.html', {'psus': psus, 'form': form})
 
 
 def case_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = CaseSearchForm(request.GET)
     cases_list = Case.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        form_factor = form.cleaned_data.get('form_factor')
+        dimensions = form.cleaned_data.get('dimensions')
+
+        if q:
             cases_list = cases_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer:
+            cases_list = cases_list.filter(manufacturer=manufacturer)
+        if form_factor:
+            cases_list = cases_list.filter(form_factor__icontains=form_factor)
+        if dimensions:
+            cases_list = cases_list.filter(dimensions__icontains=dimensions)
 
     paginator = Paginator(cases_list, 6)
     page = request.GET.get('page')
@@ -218,26 +254,32 @@ def case_list(request):
     except EmptyPage:
         cases = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/case_list.html', {'cases': cases, 'form': form, 'query': query})
-
-
-def case_detail(request, pk):
-    case = get_object_or_404(Case, pk=pk)
-    review_form = ReviewForm()
-    return render(request, 'components/case_detail.html', {'case': case, 'review_form': review_form})
+    return render(request, 'components/case_list.html', {'cases': cases, 'form': form})
 
 
 def cooler_list(request):
-    form = ComponentSearchForm(request.GET)
-    query = ''
+    form = CoolerSearchForm(request.GET)
     coolers_list = Cooler.objects.all()
 
     if form.is_valid():
-        query = form.cleaned_data['q']
-        if query:
+        q = form.cleaned_data.get('q')
+        manufacturer = form.cleaned_data.get('manufacturer')
+        cooler_type = form.cleaned_data.get('cooler_type')
+        fan_size = form.cleaned_data.get('fan_size')
+        rgb = form.cleaned_data.get('rgb')
+
+        if q:
             coolers_list = coolers_list.filter(
-                Q(manufacturer__name__icontains=query) | Q(model__icontains=query)
+                Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
+        if manufacturer: # Check if manufacturer is selected
+            coolers_list = coolers_list.filter(manufacturer=manufacturer)
+        if cooler_type:
+            coolers_list = coolers_list.filter(cooler_type=cooler_type)
+        if fan_size:
+            coolers_list = coolers_list.filter(fan_size=fan_size)
+        if rgb:
+            coolers_list = coolers_list.filter(rgb=rgb)
 
     paginator = Paginator(coolers_list, 6)
     page = request.GET.get('page')
@@ -248,7 +290,49 @@ def cooler_list(request):
     except EmptyPage:
         coolers = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/cooler_list.html', {'coolers': coolers, 'form': form, 'query': query})
+    return render(request, 'components/cooler_list.html', {'coolers': coolers, 'form': form})
+
+
+def cpu_detail(request, pk):
+    cpu = get_object_or_404(CPU, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/cpu_detail.html', {'cpu': cpu, 'review_form': review_form})
+
+
+def gpu_detail(request, pk):
+    gpu = get_object_or_404(GPU, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/gpu_detail.html', {'gpu': gpu, 'review_form': review_form})
+
+
+def motherboard_detail(request, pk):
+    motherboard = get_object_or_404(Motherboard, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/motherboard_detail.html', {'motherboard': motherboard, 'review_form': review_form})
+
+
+def ram_detail(request, pk):
+    ram = get_object_or_404(RAM, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/ram_detail.html', {'ram': ram, 'review_form': review_form})
+
+
+def storage_detail(request, pk):
+    storage = get_object_or_404(Storage, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/storage_detail.html', {'storage': storage, 'review_form': review_form})
+
+
+def psu_detail(request, pk):
+    psu = get_object_or_404(PSU, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/psu_detail.html', {'psu': psu, 'review_form': review_form})
+
+
+def case_detail(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    review_form = ReviewForm()
+    return render(request, 'components/case_detail.html', {'case': case, 'review_form': review_form})
 
 
 def cooler_detail(request, pk):
@@ -310,7 +394,6 @@ def add_review(request, pk, component_type):
         return redirect('home') # Или другая подходящая страница.
 
 
-
 def is_employee(user):  # Assuming you have this function
     return user.is_staff
 
@@ -335,6 +418,7 @@ def reduce_stock_item(request, pk):
         stock_item.quantity = 0  # Предотвращаем отрицательное количество
     stock_item.save()
     return HttpResponseRedirect(reverse('components:stock_list'))
+
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)

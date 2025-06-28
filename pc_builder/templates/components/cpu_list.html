@@ -7,10 +7,31 @@
 <h2 class="animate__animated animate__fadeIn">Список процессоров</h2>
 
 <form method="get" class="mb-4 animate__animated animate__fadeIn">
-    <div class="input-group">
-        <input type="text" class="form-control" placeholder="Поиск процессора..." name="q" value="{{ query|default:'' }}">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="Поиск процессора..." name="q" value="{{ form.q.value|default:'' }}">
         <button class="btn btn-outline-secondary" type="submit">Поиск</button>
     </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="{{ form.manufacturer.id_for_label }}" class="form-label">Производитель:</label>
+            {{ form.manufacturer }}
+        </div>
+        <div class="col-md-4">
+            <label for="{{ form.socket.id_for_label }}" class="form-label">Сокет:</label>
+            <input type="text" class="form-control" id="{{ form.socket.id_for_label }}" name="{{ form.socket.name }}" value="{{ form.socket.value|default:'' }}">
+        </div>
+        <div class="col-md-4">
+            <div class="form-check">
+                {{ form.integrated_graphics }}
+                <label class="form-check-label" for="{{ form.integrated_graphics.id_for_label }}">
+                    Интегрированное графическое ядро
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Применить фильтры</button>
 </form>
 
 <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -61,7 +82,7 @@
     <ul class="pagination justify-content-center">
         {% if cpus.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?q={{ query }}&page={{ cpus.previous_page_number }}" aria-label="Предыдущая">
+            <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cpus.previous_page_number }}" aria-label="Предыдущая">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
@@ -77,13 +98,13 @@
             <span class="page-link">{{ num }}</span>
         </li>
         {% else %}
-        <li class="page-item"><a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a></li>
+        <li class="page-item"><a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ num }}">{{ num }}</a></li>
         {% endif %}
         {% endfor %}
 
         {% if cpus.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?q={{ query }}&page={{ cpus.next_page_number }}" aria-label="Следующая">
+            <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cpus.next_page_number }}" aria-label="Следующая">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
@@ -143,5 +164,3 @@
 </script>
 
 {% endblock %}
-
-

@@ -8,6 +8,7 @@ from .forms import (
     StorageForm,
     PSUForm,
     CaseForm,
+    CoolerForm,
 )
 from .models import (
     Manufacturer,
@@ -38,10 +39,13 @@ class CPUAdmin(admin.ModelAdmin):
         'model',
         'cores',
         'frequency',
+        'tdp',
         'price',
+        'socket',
         'image',
+        'integrated_graphics',  # Added to list display
     )
-    list_filter = ('manufacturer',)
+    list_filter = ('manufacturer', 'integrated_graphics')  # Added to list filter
     search_fields = ('model', 'manufacturer__name')
     ordering = ('manufacturer', 'model')
     form = CPUForm
@@ -57,8 +61,10 @@ class GPUAdmin(admin.ModelAdmin):
         'tdp',
         'price',
         'image',
+        'interface', # Added to list display
+        'ray_tracing', # Added to list display
     )
-    list_filter = ('manufacturer',)
+    list_filter = ('manufacturer', 'ray_tracing')  # Added to list filter
     search_fields = ('model', 'manufacturer__name')
     ordering = ('manufacturer', 'model')
     form = GPUForm
@@ -74,8 +80,9 @@ class MotherboardAdmin(admin.ModelAdmin):
         'chipset',
         'price',
         'image',
+        'wifi', # Added to list display
     )
-    list_filter = ('manufacturer', 'form_factor', 'socket', 'chipset')
+    list_filter = ('manufacturer', 'form_factor', 'socket', 'chipset', 'wifi')  # Added to list filter
     search_fields = ('model', 'manufacturer__name', 'socket', 'chipset')
     ordering = ('manufacturer', 'model')
     form = MotherboardForm
@@ -91,8 +98,9 @@ class RAMAdmin(admin.ModelAdmin):
         'type',
         'price',
         'image',
+        'rgb', # Added to list display
     )
-    list_filter = ('manufacturer', 'type')
+    list_filter = ('manufacturer', 'type', 'rgb')  # Added to list filter
     search_fields = ('model', 'manufacturer__name', 'type')
     ordering = ('manufacturer', 'model')
     form = RAMForm
@@ -108,8 +116,9 @@ class StorageAdmin(admin.ModelAdmin):
         'interface',
         'price',
         'image',
+        'nvme', # Added to list display
     )
-    list_filter = ('manufacturer', 'type', 'interface')
+    list_filter = ('manufacturer', 'type', 'interface', 'nvme')  # Added to list filter
     search_fields = ('model', 'manufacturer__name', 'type', 'interface')
     ordering = ('manufacturer', 'model')
     form = StorageForm
@@ -124,8 +133,9 @@ class PSUAdmin(admin.ModelAdmin):
         'certification',
         'price',
         'image',
+        'modular', # Added to list display
     )
-    list_filter = ('manufacturer', 'certification')
+    list_filter = ('manufacturer', 'certification', 'modular')  # Added to list filter
     search_fields = ('model', 'manufacturer__name', 'certification')
     ordering = ('manufacturer', 'model')
     form = PSUForm
@@ -140,8 +150,9 @@ class CaseAdmin(admin.ModelAdmin):
         'dimensions',
         'price',
         'image',
+        'side_panel_window', # Added to list display
     )
-    list_filter = ('manufacturer', 'form_factor')
+    list_filter = ('manufacturer', 'form_factor', 'side_panel_window')  # Added to list filter
     search_fields = ('model', 'manufacturer__name', 'form_factor')
     ordering = ('manufacturer', 'model')
     form = CaseForm
@@ -156,9 +167,11 @@ class CoolerAdmin(admin.ModelAdmin):
         'fan_size',
         'price',
         'image',
+        'rgb', # Added to list display
     )
-    list_filter = ('manufacturer', 'cooler_type')
+    list_filter = ('manufacturer', 'cooler_type', 'rgb')  # Added to list filter
     search_fields = ('model', 'manufacturer__name')
+    form = CoolerForm
 
 
 def replenish_stock(modeladmin, request, queryset):

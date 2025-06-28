@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'users',
     'fps_data',
     'debug_toolbar',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

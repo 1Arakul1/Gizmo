@@ -19,7 +19,7 @@ def create_database():
     """
     load_dotenv()
 
-    db_name = os.getenv("DJANGO_DATABASE_NAME", "Gizmo")  # Имя базы данных из env, по умолчанию "Bony"
+    db_name = os.getenv("DJANGO_DATABASE_NAME", "Gizmo") 
     db_user = os.getenv("DJANGO_DATABASE_USER")
     db_password = os.getenv("DJANGO_DATABASE_PASSWORD")
     db_host = os.getenv("DJANGO_DATABASE_HOST")

@@ -1,0 +1,46 @@
+[
+  {
+    "model": "components.manufacturer",
+    "pk": 101,
+    "fields": {
+      "name": "Noctua",
+      "component_type": "cooler"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 102,
+    "fields": {
+      "name": "be quiet!",
+      "component_type": "cooler"
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 201,
+    "fields": {
+      "manufacturer": 101,
+      "model": "NH-D15",
+      "cooler_type": "air",
+      "fan_size": 140,
+      "radiator_size": null,
+      "price": "99.99",
+      "image": null,
+      "rgb": false
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 202,
+    "fields": {
+      "manufacturer": 102,
+      "model": "Dark Rock Pro 4",
+      "cooler_type": "air",
+      "fan_size": 135,
+      "radiator_size": null,
+      "price": "89.99",
+      "image": null,
+      "rgb": false
+    }
+  }
+]

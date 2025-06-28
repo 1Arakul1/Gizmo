@@ -26,7 +26,7 @@ class Manufacturer(models.Model):
             ('storage', 'Накопитель'),
             ('psu', 'Блок питания'),
             ('case', 'Корпус'),
-            ('cooler', 'Охлаждение'),  # Fixed typo here
+            ('cooler', 'Охлаждение'),
         ],
         verbose_name="Тип компонента",
         blank=True,
@@ -60,6 +60,9 @@ class CPU(models.Model):
     socket = models.CharField(max_length=50, verbose_name="Сокет")
     image = models.ImageField(
         upload_to='cpu_images/', verbose_name="Изображение", blank=True, null=True
+    )
+    integrated_graphics = models.BooleanField(
+        default=False, verbose_name="Интегрированная графика"
     )
 
     def __str__(self):
@@ -107,6 +110,9 @@ class Motherboard(models.Model):
         blank=True,
         null=True,
     )
+    wifi = models.BooleanField(
+        default=False, verbose_name="Wi-Fi"
+    )  # Added WiFi support
 
     def __str__(self):
         return f"{self.manufacturer} {self.model}"
@@ -150,6 +156,9 @@ class RAM(models.Model):
     image = models.ImageField(
         upload_to='ram_images/', verbose_name="Изображение", blank=True, null=True
     )
+    rgb = models.BooleanField(
+        default=False, verbose_name="RGB подсветка"
+    )  # Added RGB lighting
 
     def __str__(self):
         return (
@@ -194,6 +203,9 @@ class GPU(models.Model):
     interface = models.CharField(
         max_length=50, verbose_name="Интерфейс", default="PCIe x16"
     )  # Добавлено поле interface
+    ray_tracing = models.BooleanField(
+        default=False, verbose_name="Поддержка Ray Tracing"
+    )  # Added Ray Tracing Support
 
     def __str__(self):
         return f"{self.manufacturer} {self.model}"
@@ -234,6 +246,9 @@ class Storage(models.Model):
         blank=True,
         null=True,
     )
+    nvme = models.BooleanField(
+        default=False, verbose_name="NVMe Support"
+    )  # Added NVMe Support
 
     def __str__(self):
         return (
@@ -267,6 +282,9 @@ class PSU(models.Model):
     image = models.ImageField(
         upload_to='psu_images/', verbose_name="Изображение", blank=True, null=True
     )
+    modular = models.BooleanField(
+        default=False, verbose_name="Модульный"
+    )  # Added Modular Support
 
     def __str__(self):
         return f"{self.manufacturer} {self.model} ({self.power} Вт)"
@@ -306,6 +324,9 @@ class Case(models.Model):
         verbose_name="Поддерживаемые форм-факторы мат. плат",
         default="ATX, Micro-ATX, Mini-ITX",
     )
+    side_panel_window = models.BooleanField(
+        default=False, verbose_name="Боковое окно"
+    )  # Added Side Panel Window
 
     def __str__(self):
         return f"{self.manufacturer} {self.model} ({self.form_factor})"
@@ -454,6 +475,9 @@ class Cooler(models.Model):
     image = models.ImageField(
         upload_to='cooler_images/', verbose_name="Изображение", blank=True, null=True
     )
+    rgb = models.BooleanField(
+        default=False, verbose_name="RGB подсветка"
+    )  # Added RGB lighting
 
     def __str__(self):
         return f"{self.manufacturer} {self.model}"

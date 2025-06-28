@@ -1,0 +1,78 @@
+[
+  {
+    "model": "components.manufacturer",
+    "pk": 1,
+    "fields": {
+      "name": "Intel",
+      "component_type": "cpu"
+    }
+  },
+  {
+    "model": "components.manufacturer",
+    "pk": 2,
+    "fields": {
+      "name": "AMD",
+      "component_type": "cpu"
+    }
+  },
+  {
+    "model": "components.cpu",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 1,
+      "model": "Core i5-12600K",
+      "cores": 10,
+      "frequency": 3.7,
+      "tdp": 125,
+      "price": "250.00",
+      "socket": "LGA 1700",
+      "image": null,
+      "integrated_graphics": true
+    }
+  },
+  {
+    "model": "components.cpu",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 1,
+      "model": "Core i7-12700K",
+      "cores": 12,
+      "frequency": 3.6,
+      "tdp": 125,
+      "price": "350.00",
+      "socket": "LGA 1700",
+      "image": null,
+      "integrated_graphics": true
+    }
+  },
+  {
+    "model": "components.cpu",
+    "pk": 3,
+    "fields": {
+      "manufacturer": 2,
+      "model": "Ryzen 5 5600X",
+      "cores": 6,
+      "frequency": 3.7,
+      "tdp": 65,
+      "price": "220.00",
+      "socket": "AM4",
+      "image": null,
+      "integrated_graphics": false
+    }
+  },
+  {
+    "model": "components.cpu",
+    "pk": 4,
+    "fields": {
+      "manufacturer": 2,
+      "model": "Ryzen 7 5800X",
+      "cores": 8,
+      "frequency": 3.8,
+      "tdp": 105,
+      "price": "380.00",
+      "socket": "AM4",
+      "image": null,
+      "integrated_graphics": false
+    }
+  }
+]
