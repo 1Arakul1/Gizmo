@@ -11,9 +11,13 @@ from django.contrib.auth.forms import UserCreationForm  # noqa: F401
 from django.contrib.auth.tokens import default_token_generator  # noqa: F401
 from django.db import models  # noqa: F401
 from django.contrib.auth import authenticate, login  # noqa: F401
+from django.db import transaction # Импортируем для транзакций
+from django.urls import reverse # Импортируем reverse
+from django.conf import settings #Импортируем settings
 
 from builds.models import Build, CartItem, Order, OrderItem, ReturnRequest
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, TopUpBalanceForm # Импортируем TopUpBalanceForm
+from .models import Balance, Transaction # Импортируем Balance и Transaction
 from .utils import (
     send_registration_email,
     send_password_reset_email,
@@ -29,16 +33,18 @@ def profile(request):
     user = request.user
     builds = Build.objects.filter(user=user)
     cart_items = CartItem.objects.filter(user=user)
-
-    # Получаем ВСЕ заказы пользователя, сортированные по дате
     orders = Order.objects.filter(user=user).order_by('-order_date')
+    return_requests = ReturnRequest.objects.filter(user=user)
+
+    # Получаем или создаем баланс пользователя
+    balance, created = Balance.objects.get_or_create(user=user)
+    transactions = Transaction.objects.filter(user=user).order_by('-timestamp')  # Получаем историю транзакций
 
     # Проверяем статус заказов и отправляем уведомления
     for order in orders:
         if order.status in ['delivered', 'delivering']:
             send_order_status_email(order)
 
-    return_requests = ReturnRequest.objects.filter(user=user)
 
     context = {
         'user': user,
@@ -46,6 +52,8 @@ def profile(request):
         'cart_items': cart_items,
         'orders': orders,
         'return_requests': return_requests,
+        'balance': balance,
+        'transactions': transactions,  # Передаем историю транзакций в контекст
     }
     return render(request, 'users/profile.html', context)
 
@@ -131,3 +139,33 @@ def password_reset(request):
             messages.error(request, 'Пользователь с таким email не найден.')
             return render(request, 'users/password_reset.html')
     return render(request, 'users/password_reset.html')
+
+@login_required
+def top_up_balance(request):
+    """Пополнение баланса пользователя."""
+    if request.method == 'POST':
+        form = TopUpBalanceForm(request.POST)
+        if form.is_valid():
+            amount = form.cleaned_data['amount']
+            user = request.user
+
+            try:
+                with transaction.atomic(): # Используем транзакцию
+                    balance, created = Balance.objects.get_or_create(user=user)
+                    balance.balance += amount
+                    balance.save()
+                    # Создаем запись в истории транзакций
+                    Transaction.objects.create(
+                        user=user,
+                        amount=amount,
+                        transaction_type='deposit',
+                        description=f"Пополнение баланса на сумму {amount}",
+                    )
+                messages.success(request, f"Баланс успешно пополнен на {amount}!")
+                return redirect('users:profile')  # Перенаправляем в профиль
+            except Exception as e:
+                messages.error(request, f"Ошибка при пополнении баланса: {e}")
+                print(f"Ошибка пополнения баланса: {e}")
+    else:
+        form = TopUpBalanceForm()
+    return render(request, 'users/top_up_balance.html', {'form': form})

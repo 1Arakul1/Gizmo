@@ -2,10 +2,10 @@
 import json
 import logging
 from decimal import Decimal
-
+from users.models import Balance, Transaction 
 from django.conf import settings
 from django.contrib import messages
-
+from django.db import transaction 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.sessions.models import Session
 from django.core.exceptions import (
@@ -94,18 +94,42 @@ def is_employee(user):
 def employee_process_return(request, return_request_id):
     """Обрабатывает запрос на возврат (сотрудник)."""
     return_request = get_object_or_404(ReturnRequest, pk=return_request_id)
+    order_item = return_request.order_item
+    order = order_item.order
+    user = order.user
 
     if request.method == 'POST':
         status = request.POST.get('status')
         comment = request.POST.get('comment')
 
-        return_request.status = status
-        return_request.comment = comment
-        return_request.save()
-        messages.success(
-            request, "Статус возврата успешно обновлен."
-        )  # Добавлено сообщение об успехе
-        return redirect('builds:employee_order_history')  # Редирект на employee_order_history
+        try:
+            with transaction.atomic():
+                return_request.status = status
+                return_request.comment = comment
+                return_request.save()
+
+                if status == 'refunded':  # Если статус "Возмещены средства"
+                    # Возвращаем деньги на баланс пользователя
+                    balance, created = Balance.objects.get_or_create(user=user)
+                    refund_amount = order_item.price * order_item.quantity  # Сумма возврата
+                    balance.balance += refund_amount
+                    balance.save()
+
+                    # Создаем транзакцию о возврате средств
+                    Transaction.objects.create(
+                        user=user,
+                        amount=refund_amount,
+                        transaction_type='refund',
+                        description=f"Возврат средств за заказ #{order.pk}, товар: {order_item.item}",
+                    )
+                    messages.success(request, f"Средства в размере {refund_amount} успешно возвращены пользователю {user.username}.")
+
+                messages.success(request, "Статус возврата успешно обновлен.")
+
+        except Exception as e:
+            messages.error(request, f"Ошибка при обработке возврата: {e}")
+
+        return redirect('builds:employee_order_history')
 
     context = {
         'return_request': return_request,
@@ -922,15 +946,14 @@ def employee_order_history(request):
 def checkout(request):
     cart_items = CartItem.objects.filter(user=request.user)
     total_price = sum(item.get_total_price() for item in cart_items)
+    user = request.user  # Получаем текущего пользователя
 
     if request.method == 'POST':
-        # Обработка данных формы оформления заказа
         email = request.POST.get('email')
         delivery_option = request.POST.get('delivery_option')
         payment_method = request.POST.get('payment_method')
         address = request.POST.get('address')
 
-        # Валидация данных (здесь можно добавить более сложную валидацию)
         if not email or not delivery_option or not payment_method:
             messages.error(request, "Пожалуйста, заполните все поля.")
             return render(
@@ -939,95 +962,129 @@ def checkout(request):
                 {'cart_items': cart_items, 'total_price': total_price},
             )
 
-        # Создание заказа
-        order = Order.objects.create(
-            user=request.user,
-            email=email,
-            delivery_option=delivery_option,
-            payment_method=payment_method,
-            address=address,
-            total_amount=total_price,
-            order_date=timezone.now(),
-        )
-
-        print(
-            f"DEBUG: Order {order.pk}, status: '{order.status}' AFTER CREATION"
-        )  # Добавляем отладочный вывод
-
-        # Создание позиций заказа
-        for item in cart_items:
-            component_type = None
-            component_id = None
-
-            if item.build:
-                component_type = 'build'
-                component_id = item.build.pk
-            elif item.cpu:
-                component_type = 'cpu'
-                component_id = item.cpu.pk
-            elif item.gpu:
-                component_type = 'gpu'
-                component_id = item.gpu.pk
-            elif item.motherboard:
-                component_type = 'motherboard'
-                component_id = item.motherboard.pk
-            elif item.ram:
-                component_type = 'ram'
-                component_id = item.ram.pk
-            elif item.storage:
-                component_type = 'storage'
-                component_id = item.storage.pk
-            elif item.psu:
-                component_type = 'psu'
-                component_id = item.psu.pk
-            elif item.case:
-                component_type = 'case'
-                component_id = item.case.pk
-            elif item.cooler:
-                component_type = 'cooler'
-                component_id = item.cooler.pk
-
-            OrderItem.objects.create(
-                order=order,
-                item=str(item),  # Преобразуем товар в строку
-                quantity=item.quantity,
-                price=item.get_total_price() / item.quantity,
-                component_type=component_type,
-                component_id=component_id,
-            )
-
-        # Очистка корзины после оформления заказа
-        cart_items.delete()
-
-        # Отправка уведомления по электронной почте
-        subject = 'Ваш заказ оформлен!'
-        message = (
-            f'Спасибо за ваш заказ! \n\nСумма заказа: {total_price} ₽\n'
-            f'Способ доставки: {order.delivery_option}\n'
-            f'Способ оплаты: {order.payment_method}\n'
-            f'Адрес доставки: {order.address}\n'
-            f'Ваш трек-номер: {order.track_number}'
-        )
-        from_email = settings.EMAIL_HOST_USER
-        recipient_list = [email]
-
         try:
-            send_mail(subject, message, from_email, recipient_list)
-            success = True
-        except Exception as e:
-            messages.error(
-                request, f"Заказ оформлен, но не удалось отправить уведомление: {e}"
-            )
-            success = False
+            with transaction.atomic():
+                # Создание заказа (определяем order до if payment_method == 'balance')
+                order = Order.objects.create(
+                    user=user,
+                    email=email,
+                    delivery_option=delivery_option,
+                    payment_method=payment_method,
+                    address=address,
+                    total_amount=total_price,
+                    order_date=timezone.now(),
+                )
 
-        # Перенаправление на страницу подтверждения с параметром в URL
-        if success:
-            return redirect(
-                reverse('builds:order_confirmation')
-                + f'?success=True&track_number={order.track_number}'
-            )
-        else:
-            return redirect(reverse('builds:order_confirmation') + '?success=False')
+                # Проверяем, выбран ли способ оплаты "С личного счета"
+                if payment_method == 'balance':
+                    # Получаем баланс пользователя
+                    balance, created = Balance.objects.get_or_create(user=user)
+
+                    # Проверяем, достаточно ли средств на балансе
+                    if balance.balance < total_price:
+                        messages.error(
+                            request,
+                            "Недостаточно средств на балансе. Пополните счет.",
+                        )
+                        return render(
+                            request,
+                            'builds/checkout.html',
+                            {'cart_items': cart_items, 'total_price': total_price},
+                        )
+
+                    # Списываем средства с баланса
+                    balance.balance -= total_price
+                    balance.save()
+
+                    # Создаем транзакцию о списании средств
+                    Transaction.objects.create(
+                        user=user,
+                        amount=total_price,
+                        transaction_type='purchase',
+                        description=f"Оплата заказа #{order.pk}",  # Номер заказа будет известен после создания
+                    )
+
+                # Создание позиций заказа
+                for item in cart_items:
+                    component_type = None
+                    component_id = None
+
+                    if item.build:
+                        component_type = 'build'
+                        component_id = item.build.pk
+                    elif item.cpu:
+                        component_type = 'cpu'
+                        component_id = item.cpu.pk
+                    elif item.gpu:
+                        component_type = 'gpu'
+                        component_id = item.gpu.pk
+                    elif item.motherboard:
+                        component_type = 'motherboard'
+                        component_id = item.motherboard.pk
+                    elif item.ram:
+                        component_type = 'ram'
+                        component_id = item.ram.pk
+                    elif item.storage:
+                        component_type = 'storage'
+                        component_id = item.storage.pk
+                    elif item.psu:
+                        component_type = 'psu'
+                        component_id = item.psu.pk
+                    elif item.case:
+                        component_type = 'case'
+                        component_id = item.case.pk
+                    elif item.cooler:
+                        component_type = 'cooler'
+                        component_id = item.cooler.pk
+
+                    OrderItem.objects.create(
+                        order=order,
+                        item=str(item),  # Преобразуем товар в строку
+                        quantity=item.quantity,
+                        price=item.get_total_price() / item.quantity,
+                        component_type=component_type,
+                        component_id=component_id,
+                    )
+
+                # Очистка корзины после оформления заказа
+                cart_items.delete()
+
+                # Отправка уведомления по электронной почте
+                subject = 'Ваш заказ оформлен!'
+                message = (
+                    f'Спасибо за ваш заказ! \n\nСумма заказа: {total_price} ₽\n'
+                    f'Способ доставки: {order.delivery_option}\n'
+                    f'Способ оплаты: {order.payment_method}\n'
+                    f'Адрес доставки: {order.address}\n'
+                    f'Ваш трек-номер: {order.track_number}'
+                )
+                from_email = settings.EMAIL_HOST_USER
+                recipient_list = [email]
+
+                try:
+                    send_mail(subject, message, from_email, recipient_list)
+                    success = True
+                except Exception as e:
+                    messages.error(
+                        request,
+                        f"Заказ оформлен, но не удалось отправить уведомление: {e}",
+                    )
+                    success = False
+
+                # Перенаправление на страницу подтверждения с параметром в URL
+                if success:
+                    return redirect(
+                        reverse('builds:order_confirmation')
+                        + f'?success=True&track_number={order.track_number}'
+                    )
+                else:
+                    return redirect(
+                        reverse('builds:order_confirmation') + '?success=False'
+                    )
+
+        except Exception as e:
+            messages.error(request, f"Ошибка при оформлении заказа: {e}")
+            print(f"Ошибка оформления заказа: {e}")
 
     return render(
         request,
