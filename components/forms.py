@@ -1,5 +1,6 @@
 # components/forms.py
 from django import forms
+from django.core.exceptions import ValidationError
 from .models import (
     CPU,
     GPU,
@@ -13,8 +14,38 @@ from .models import (
     Review,
 )
 
-# Forms for the admin panel (creation/editing)
-class CPUForm(forms.ModelForm):
+class UniqueManufacturerMixin:
+    """
+    Миксин для форм, чтобы проверять уникальность производителя и модели.
+    """
+
+    def clean(self):
+        cleaned_data = super().clean()
+        manufacturer = cleaned_data.get('manufacturer')
+        model = cleaned_data.get('model')
+
+        if manufacturer and model:
+            # Проверяем, существует ли уже компонент с таким производителем и моделью
+            model_class = self._meta.model
+            # Исключаем текущий экземпляр, если это редактирование
+            if self.instance:  # Check if it's an update
+                existing_component = model_class.objects.filter(
+                    manufacturer=manufacturer, model=model
+                ).exclude(pk=self.instance.pk)  # Exclude the current instance
+            else:
+                existing_component = model_class.objects.filter(
+                    manufacturer=manufacturer, model=model
+                )
+
+            if existing_component.exists():
+                raise ValidationError(
+                    f"Компонент с таким производителем и моделью уже существует."
+                )
+
+        return cleaned_data
+
+
+class CPUForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = CPU
         fields = '__all__'
@@ -26,7 +57,7 @@ class CPUForm(forms.ModelForm):
         )
 
 
-class GPUForm(forms.ModelForm):
+class GPUForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = GPU
         fields = '__all__'
@@ -38,7 +69,7 @@ class GPUForm(forms.ModelForm):
         )
 
 
-class MotherboardForm(forms.ModelForm):
+class MotherboardForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = Motherboard
         fields = '__all__'
@@ -50,7 +81,7 @@ class MotherboardForm(forms.ModelForm):
         )
 
 
-class RAMForm(forms.ModelForm):
+class RAMForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = RAM
         fields = '__all__'
@@ -62,7 +93,7 @@ class RAMForm(forms.ModelForm):
         )
 
 
-class StorageForm(forms.ModelForm):
+class StorageForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = Storage
         fields = '__all__'
@@ -74,7 +105,7 @@ class StorageForm(forms.ModelForm):
         )
 
 
-class PSUForm(forms.ModelForm):
+class PSUForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = PSU
         fields = '__all__'
@@ -86,7 +117,7 @@ class PSUForm(forms.ModelForm):
         )
 
 
-class CaseForm(forms.ModelForm):
+class CaseForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = Case
         fields = '__all__'
@@ -98,7 +129,7 @@ class CaseForm(forms.ModelForm):
         )
 
 
-class CoolerForm(forms.ModelForm):
+class CoolerForm(UniqueManufacturerMixin, forms.ModelForm):
     class Meta:
         model = Cooler
         fields = '__all__'

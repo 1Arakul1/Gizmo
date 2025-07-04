@@ -405,6 +405,8 @@ def build_create(request):
                 error_message = 'Процессор не совместим с материнской платой.'
 
         if motherboard and ram:
+            print(f"Motherboard type: {motherboard.ram_type}, RAM type: {ram.type}")
+            print(f"Motherboard max freq: {motherboard.max_ram_frequency}, RAM freq: {ram.frequency}")
             if not motherboard.is_compatible_with_ram(ram):
                 error_message = 'Оперативная память не совместима с материнской платой.'
 

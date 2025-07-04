@@ -293,6 +293,7 @@ class PSU(models.Model):
         verbose_name = "Блок питания"
         verbose_name_plural = "Блоки питания"
         ordering = ['manufacturer', 'model']
+        unique_together = ['manufacturer', 'model']  # Ensure manufacturer + model is unique
 
     def is_sufficient_for_gpu(self, gpu):
         """Проверяет, достаточно ли мощности блока питания для видеокарты."""
