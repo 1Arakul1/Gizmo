@@ -1,0 +1,29 @@
+<!-- users/templates/users/confirm_top_up.html -->
+{% extends "base.html" %}
+{% block content %}
+  <h2>Подтверждение пополнения баланса</h2>
+
+  {% if error %}
+    <div class="alert alert-danger">
+      Неверный код подтверждения.
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in field.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Подтвердить</button>
+  </form>
+{% endblock %}

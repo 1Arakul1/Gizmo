@@ -12,4 +12,5 @@ urlpatterns = [
     path('password_reset/', views.password_reset, name='password_reset'),
     path('return_request/<int:order_item_id>/', views.create_return_request, name='create_return_request'),
     path('top_up_balance/', views.top_up_balance, name='top_up_balance'),
+    path('confirm_top_up/', views.confirm_top_up, name='confirm_top_up'),
 ]

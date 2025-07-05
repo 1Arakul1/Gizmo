@@ -1,8 +1,8 @@
 # users/utils.py
+# users/utils.py
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-
 
 def send_order_status_email(order):
     """Отправляет email уведомление об изменении статуса заказа."""
@@ -34,59 +34,30 @@ def send_order_status_email(order):
         send_mail(
             subject,
             message,
-            settings.DEFAULT_FROM_EMAIL,  # Отправитель (укажите в settings.py)
-            [order.email],  # Получатель (email из заказа)
+            settings.DEFAULT_FROM_EMAIL,
+            [order.email],
             fail_silently=False,
         )
-        print(
-            f"DEBUG: Email sent to {order.email} for order #{order.pk}, "
-            f"status: {order.status}"
-        )  # Логгируем отправку
+        print(f"DEBUG: Email sent to {order.email} for order #{order.pk}, status: {order.status}")
     except Exception as e:
-        print(
-            f"DEBUG: Error sending email to {order.email} for order #{order.pk}: {e}"
-        )  # Логгируем ошибку
-
+        print(f"DEBUG: Error sending email to {order.email} for order #{order.pk}: {e}")
 
 def send_registration_email(user):
     """Отправляет письмо с информацией о регистрации."""
     subject = 'Регистрация на нашем сайте'
-    message = render_to_string(
-        'users/email/registration_email.txt',
-        {
-            'user': user,
-        },
-    )
-    html_message = render_to_string(
-        'users/email/registration_email.html',
-        {
-            'user': user,
-        },
-    )
+    message = render_to_string('users/email/registration_email.txt', {'user': user})
+    html_message = render_to_string('users/email/registration_email.html', {'user': user})
 
     from_email = settings.DEFAULT_FROM_EMAIL
     to_email = [user.email]
 
     send_mail(subject, message, from_email, to_email, html_message=html_message)
 
-
 def send_password_reset_email(user, new_password):
     """Отправляет письмо с новым паролем."""
     subject = 'Сброс пароля'
-    message = render_to_string(
-        'users/email/password_reset_email.txt',
-        {
-            'user': user,
-            'new_password': new_password,
-        },
-    )
-    html_message = render_to_string(
-        'users/email/password_reset_email.html',
-        {
-            'user': user,
-            'new_password': new_password,
-        },
-    )
+    message = render_to_string('users/email/password_reset_email.txt', {'user': user, 'new_password': new_password})
+    html_message = render_to_string('users/email/password_reset_email.html', {'user': user, 'new_password': new_password})
 
     from_email = settings.DEFAULT_FROM_EMAIL
     to_email = [user.email]
