@@ -2,6 +2,7 @@
 <!-- components/templates/components/gpu_list.html -->
 {% extends "base.html" %}
 {% load static %}
+{% load component_tags %}
 
 {% block content %}
 <h2 class="animate__animated animate__fadeIn">Список видеокарт</h2>
@@ -52,10 +53,22 @@
             {% endif %}
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{ gpu.manufacturer }} {{ gpu.model }}</h5>
-                <p class="card-text mb-4">
+                <p class="card-text mb-2">
                     <strong>Объем памяти:</strong> {{ gpu.memory }} GB<br>
                     <strong>Цена:</strong> {{ gpu.price }} ₽
                 </p>
+
+                 {% with stock_item=stock_dict|get_item:gpu.id %}
+                    {% if stock_item %}
+                        {% if stock_item.quantity > 0 %}
+                            <p class="text-success">В наличии</p>
+                        {% else %}
+                            <p class="text-danger fw-bold">Товара временно нет в наличии</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Информация о наличии отсутствует</p>
+                    {% endif %}
+
                 <a href="{% url 'components:gpu_detail' gpu.pk %}" class="btn btn-primary mt-auto mb-3">Подробнее</a>
                 <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form"
                       data-cpu-id="{{ gpu.pk }}">
@@ -67,8 +80,9 @@
                         <input type="number" class="form-control" id="quantity-{{ gpu.pk }}" name="quantity"
                                value="1" min="1">
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Добавить в корзину</button>
+                     <button type="submit" class="btn btn-success w-100"{% if not stock_item or stock_item.quantity == 0 %} disabled{% endif %}>Добавить в корзину</button>
                 </form>
+                 {% endwith %}
                 <div class="added-message text-success mt-2" id="added-message-{{ gpu.pk }}"
                      style="display: none; font-weight: 600;">
                     Товар в корзине

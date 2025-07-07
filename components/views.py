@@ -1,13 +1,23 @@
 # components/views.py
 # components/views.py
-
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import CPU, GPU, Motherboard, RAM, Storage, PSU, Case, Cooler, Stock, Manufacturer
+from .models import (
+    CPU,
+    GPU,
+    Motherboard,
+    RAM,
+    Storage,
+    PSU,
+    Case,
+    Cooler,
+    Stock,
+    Manufacturer,
+)
 from .forms import (
     CPUSearchForm,
     GPUSearchForm,
@@ -17,7 +27,7 @@ from .forms import (
     PSUSearchForm,
     CaseSearchForm,
     CoolerSearchForm,
-    ReviewForm
+    ReviewForm,
 )
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect  # Import all search forms
@@ -42,9 +52,11 @@ def cpu_list(request):
         if socket:
             cpus_list = cpus_list.filter(socket__icontains=socket)
         if integrated_graphics:
-            cpus_list = cpus_list.filter(
-                integrated_graphics=True
-            )  # Assuming you have this field in your CPU model
+            cpus_list = cpus_list.filter(integrated_graphics=True)
+
+    # Get all Stock objects for CPUs
+    stock_items = Stock.objects.filter(component_type='cpu')
+    stock_dict = {item.component_id: item for item in stock_items}
 
     paginator = Paginator(cpus_list, 6)
     page = request.GET.get('page')
@@ -55,7 +67,9 @@ def cpu_list(request):
     except EmptyPage:
         cpus = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/cpu_list.html', {'cpus': cpus, 'form': form})
+    return render(
+        request, 'components/cpu_list.html', {'cpus': cpus, 'form': form, 'stock_dict': stock_dict}
+    )
 
 
 def gpu_list(request):
@@ -79,6 +93,10 @@ def gpu_list(request):
         if interface:
             gpus_list = gpus_list.filter(interface__icontains=interface)
 
+    # Get all Stock objects for GPUs
+    stock_items = Stock.objects.filter(component_type='gpu')
+    stock_dict = {item.component_id: item for item in stock_items}
+
     paginator = Paginator(gpus_list, 6)
     page = request.GET.get('page')
     try:
@@ -88,7 +106,9 @@ def gpu_list(request):
     except EmptyPage:
         gpus = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/gpu_list.html', {'gpus': gpus, 'form': form})
+    return render(
+        request, 'components/gpu_list.html', {'gpus': gpus, 'form': form, 'stock_dict': stock_dict}
+    )
 
 
 def motherboard_list(request):
@@ -110,7 +130,13 @@ def motherboard_list(request):
         if socket:
             motherboards_list = motherboards_list.filter(socket__icontains=socket)
         if form_factor:
-            motherboards_list = motherboards_list.filter(form_factor__icontains=form_factor)
+            motherboards_list = motherboards_list.filter(
+                form_factor__icontains=form_factor
+            )
+
+    # Get all Stock objects for Motherboards
+    stock_items = Stock.objects.filter(component_type='motherboard')
+    stock_dict = {item.component_id: item for item in stock_items}
 
     paginator = Paginator(motherboards_list, 6)
     page = request.GET.get('page')
@@ -121,8 +147,11 @@ def motherboard_list(request):
     except EmptyPage:
         motherboards = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/motherboard_list.html',
-                  {'motherboards': motherboards, 'form': form})
+    return render(
+        request,
+        'components/motherboard_list.html',
+        {'motherboards': motherboards, 'form': form, 'stock_dict': stock_dict},
+    )
 
 
 def ram_list(request):
@@ -146,6 +175,10 @@ def ram_list(request):
         if capacity:
             rams_list = rams_list.filter(capacity=capacity)
 
+    # Get all Stock objects for RAM
+    stock_items = Stock.objects.filter(component_type='ram')
+    stock_dict = {item.component_id: item for item in stock_items}
+
     paginator = Paginator(rams_list, 6)
     page = request.GET.get('page')
     try:
@@ -155,7 +188,9 @@ def ram_list(request):
     except EmptyPage:
         rams = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/ram_list.html', {'rams': rams, 'form': form})
+    return render(
+        request, 'components/ram_list.html', {'rams': rams, 'form': form, 'stock_dict': stock_dict}
+    )
 
 
 def storage_list(request):
@@ -179,6 +214,10 @@ def storage_list(request):
         if capacity:
             storages_list = storages_list.filter(capacity=capacity)
 
+    # Get all Stock objects for Storages
+    stock_items = Stock.objects.filter(component_type='storage')
+    stock_dict = {item.component_id: item for item in stock_items}
+
     paginator = Paginator(storages_list, 6)
     page = request.GET.get('page')
     try:
@@ -188,7 +227,11 @@ def storage_list(request):
     except EmptyPage:
         storages = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/storage_list.html', {'storages': storages, 'form': form})
+    return render(
+        request,
+        'components/storage_list.html',
+        {'storages': storages, 'form': form, 'stock_dict': stock_dict},
+    )
 
 
 def psu_list(request):
@@ -212,6 +255,10 @@ def psu_list(request):
         if certification:
             psus_list = psus_list.filter(certification__icontains=certification)
 
+    # Get all Stock objects for PSUs
+    stock_items = Stock.objects.filter(component_type='psu')
+    stock_dict = {item.component_id: item for item in stock_items}
+
     paginator = Paginator(psus_list, 6)
     page = request.GET.get('page')
     try:
@@ -221,7 +268,7 @@ def psu_list(request):
     except EmptyPage:
         psus = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/psu_list.html', {'psus': psus, 'form': form})
+    return render(request, 'components/psu_list.html', {'psus': psus, 'form': form, 'stock_dict': stock_dict})
 
 
 def case_list(request):
@@ -245,6 +292,10 @@ def case_list(request):
         if dimensions:
             cases_list = cases_list.filter(dimensions__icontains=dimensions)
 
+    # Get all Stock objects for Cases
+    stock_items = Stock.objects.filter(component_type='case')
+    stock_dict = {item.component_id: item for item in stock_items}
+
     paginator = Paginator(cases_list, 6)
     page = request.GET.get('page')
     try:
@@ -254,7 +305,7 @@ def case_list(request):
     except EmptyPage:
         cases = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/case_list.html', {'cases': cases, 'form': form})
+    return render(request, 'components/case_list.html', {'cases': cases, 'form': form, 'stock_dict': stock_dict})
 
 
 def cooler_list(request):
@@ -272,7 +323,7 @@ def cooler_list(request):
             coolers_list = coolers_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer: # Check if manufacturer is selected
+        if manufacturer:  # Check if manufacturer is selected
             coolers_list = coolers_list.filter(manufacturer=manufacturer)
         if cooler_type:
             coolers_list = coolers_list.filter(cooler_type=cooler_type)
@@ -280,6 +331,10 @@ def cooler_list(request):
             coolers_list = coolers_list.filter(fan_size=fan_size)
         if rgb:
             coolers_list = coolers_list.filter(rgb=rgb)
+
+    # Get all Stock objects for Coolers
+    stock_items = Stock.objects.filter(component_type='cooler')
+    stock_dict = {item.component_id: item for item in stock_items}
 
     paginator = Paginator(coolers_list, 6)
     page = request.GET.get('page')
@@ -290,55 +345,81 @@ def cooler_list(request):
     except EmptyPage:
         coolers = paginator.page(paginator.num_pages)
 
-    return render(request, 'components/cooler_list.html', {'coolers': coolers, 'form': form})
+    return render(
+        request,
+        'components/cooler_list.html',
+        {'coolers': coolers, 'form': form, 'stock_dict': stock_dict},
+    )
 
 
 def cpu_detail(request, pk):
     cpu = get_object_or_404(CPU, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/cpu_detail.html', {'cpu': cpu, 'review_form': review_form})
+    return render(
+        request, 'components/cpu_detail.html', {'cpu': cpu, 'review_form': review_form}
+    )
 
 
 def gpu_detail(request, pk):
     gpu = get_object_or_404(GPU, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/gpu_detail.html', {'gpu': gpu, 'review_form': review_form})
+    return render(
+        request, 'components/gpu_detail.html', {'gpu': gpu, 'review_form': review_form}
+    )
 
 
 def motherboard_detail(request, pk):
     motherboard = get_object_or_404(Motherboard, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/motherboard_detail.html', {'motherboard': motherboard, 'review_form': review_form})
+    return render(
+        request,
+        'components/motherboard_detail.html',
+        {'motherboard': motherboard, 'review_form': review_form},
+    )
 
 
 def ram_detail(request, pk):
     ram = get_object_or_404(RAM, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/ram_detail.html', {'ram': ram, 'review_form': review_form})
+    return render(
+        request, 'components/ram_detail.html', {'ram': ram, 'review_form': review_form}
+    )
 
 
 def storage_detail(request, pk):
     storage = get_object_or_404(Storage, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/storage_detail.html', {'storage': storage, 'review_form': review_form})
+    return render(
+        request,
+        'components/storage_detail.html',
+        {'storage': storage, 'review_form': review_form},
+    )
 
 
 def psu_detail(request, pk):
     psu = get_object_or_404(PSU, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/psu_detail.html', {'psu': psu, 'review_form': review_form})
+    return render(
+        request, 'components/psu_detail.html', {'psu': psu, 'review_form': review_form}
+    )
 
 
 def case_detail(request, pk):
     case = get_object_or_404(Case, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/case_detail.html', {'case': case, 'review_form': review_form})
+    return render(
+        request, 'components/case_detail.html', {'case': case, 'review_form': review_form}
+    )
 
 
 def cooler_detail(request, pk):
     cooler = get_object_or_404(Cooler, pk=pk)
     review_form = ReviewForm()
-    return render(request, 'components/cooler_detail.html', {'cooler': cooler, 'review_form': review_form})
+    return render(
+        request,
+        'components/cooler_detail.html',
+        {'cooler': cooler, 'review_form': review_form},
+    )
 
 
 @login_required
@@ -372,11 +453,15 @@ def add_review(request, pk, component_type):
                 review.content_object = component
                 review.save()
                 # Construct the URL based on the component type and ID.
-                return redirect(reverse(f'components:{component_type}_detail', kwargs={'pk': pk}))
+                return redirect(
+                    reverse(
+                        f'components:{component_type}_detail', kwargs={'pk': pk}
+                    )
+                )
             else:
                 # Handle the case where no component was found.  This should ideally never happen
                 # given the get_object_or_404 calls, but it's good to be defensive.
-                return redirect('home') # Or some other safe default.
+                return redirect('home')  # Or some other safe default.
         else:
             # Если форма не валидна, нужно передать ее обратно в шаблон, чтобы показать ошибки.
             # Determine the component type and ID to render the detail template correctly
@@ -391,7 +476,7 @@ def add_review(request, pk, component_type):
             return render(request, template, {'component': component, 'review_form': form})
     else:
         # Если метод не POST, это ошибка.  Нужно перенаправить пользователя или показать страницу с ошибкой.
-        return redirect('home') # Или другая подходящая страница.
+        return redirect('home')  # Или другая подходящая страница.
 
 
 def is_employee(user):  # Assuming you have this function
@@ -399,13 +484,19 @@ def is_employee(user):  # Assuming you have this function
 
 
 @login_required
-@user_passes_test(is_employee)
+@user_passes_test(lambda u: u.is_staff)
 def replenish_stock_item(request, pk):
     """Пополняет запас выбранного элемента на 10."""
     stock_item = get_object_or_404(Stock, pk=pk)
     stock_item.quantity += 10
     stock_item.save()
-    return HttpResponseRedirect(reverse('components:stock_list'))
+
+    # Get the out of stock count after replenishing
+    out_of_stock_count = Stock.objects.filter(quantity=0).count()
+
+    # Redirect with the out_of_stock_count as a query parameter
+    url = reverse('components:stock_list') + f'?out_of_stock_count={out_of_stock_count}'
+    return HttpResponseRedirect(url)
 
 
 @login_required
@@ -449,13 +540,24 @@ def stock_list_view(request):
                     component = Cooler.objects.get(pk=stock_item.component_id)
 
                 if component:
-                    component_name = f"{component.manufacturer} {component.model}"  # Получаем имя компонента
-                    if (query.lower() in component_name.lower()) or \
-                       (query.lower() in str(stock_item.quantity).lower()): # добавил поиск по quantity
+                    component_name = (
+                        f"{component.manufacturer} {component.model}"  # Получаем имя компонента
+                    )
+                    if (query.lower() in component_name.lower()) or (
+                        query.lower() in str(stock_item.quantity).lower()
+                    ):  # добавил поиск по quantity
                         filtered_stock_items.append(stock_item)
 
-            except (CPU.DoesNotExist, GPU.DoesNotExist, Motherboard.DoesNotExist, RAM.DoesNotExist,
-                    Storage.DoesNotExist, PSU.DoesNotExist, Case.DoesNotExist, Cooler.DoesNotExist):
+            except (
+                CPU.DoesNotExist,
+                GPU.DoesNotExist,
+                Motherboard.DoesNotExist,
+                RAM.DoesNotExist,
+                Storage.DoesNotExist,
+                PSU.DoesNotExist,
+                Case.DoesNotExist,
+                Cooler.DoesNotExist,
+            ):
                 pass  # Просто игнорируем, если компонент не найден
 
         stock_items = filtered_stock_items  # Заменяем stock_items отфильтрованным списком
@@ -469,5 +571,9 @@ def stock_list_view(request):
     except EmptyPage:
         stock_items = paginator.page(paginator.num_pages)
 
-    context = {'stock_items': stock_items, 'query': query}
+    # Get out of stock count
+    out_of_stock_count = Stock.objects.filter(quantity=0).count()
+
+
+    context = {'stock_items': stock_items, 'query': query, 'out_of_stock_count': out_of_stock_count}
     return render(request, 'builds/stock_list.html', context)

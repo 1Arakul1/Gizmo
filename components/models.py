@@ -77,6 +77,14 @@ class CPU(models.Model):
         """Проверяет совместимость сокета процессора и материнской платы."""
         return self.socket == motherboard.socket
 
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='cpu', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
+
     reviews = GenericRelation(
         'components.Review', related_query_name='cpu'
     )  # Use string representation to avoid circular import
@@ -132,6 +140,16 @@ class Motherboard(models.Model):
             self.ram_type == ram.type and self.max_ram_frequency >= ram.frequency
         )
 
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(
+                component_type='motherboard', component_id=self.id
+            )
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
+
     reviews = GenericRelation(
         'components.Review', related_query_name='motherboard'
     )
@@ -178,6 +196,14 @@ class RAM(models.Model):
             and self.frequency <= motherboard.max_ram_frequency
         )
 
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='ram', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
+
     reviews = GenericRelation('components.Review', related_query_name='ram')
 
 
@@ -218,6 +244,14 @@ class GPU(models.Model):
     def is_power_compatible(self, psu):
         """Проверяет, достаточно ли мощности блока питания для видеокарты."""
         return self.tdp <= psu.power
+
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='gpu', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
 
     reviews = GenericRelation('components.Review', related_query_name='gpu')
 
@@ -261,6 +295,14 @@ class Storage(models.Model):
         verbose_name_plural = "Накопители"
         ordering = ['manufacturer', 'model']
 
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='storage', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
+
     reviews = GenericRelation('components.Review', related_query_name='storage')
 
 
@@ -299,6 +341,14 @@ class PSU(models.Model):
         """Проверяет, достаточно ли мощности блока питания для видеокарты."""
         return self.power >= gpu.tdp
 
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='psu', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
+
     reviews = GenericRelation('components.Review', related_query_name='psu')
 
 
@@ -336,6 +386,14 @@ class Case(models.Model):
         verbose_name = "Корпус"
         verbose_name_plural = "Корпуса"
         ordering = ['manufacturer', 'model']
+
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='case', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
 
     reviews = GenericRelation('components.Review', related_query_name='case')
 
@@ -492,6 +550,14 @@ class Cooler(models.Model):
         """Проверяет совместимость с CPU."""
         # Добавьте логику проверки (например, сокет, TDP и т.д.)
         return True  # Заглушка
+
+    def has_stock(self):
+        """Проверяет, есть ли товар в наличии."""
+        try:
+            stock = Stock.objects.get(component_type='cooler', component_id=self.id)
+            return stock.quantity > 0
+        except Stock.DoesNotExist:
+            return False
 
     reviews = GenericRelation('components.Review', related_query_name='cooler')
 

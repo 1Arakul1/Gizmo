@@ -1,5 +1,7 @@
+<!-- templates/components/motherboard_list.html -->
 {% extends "base.html" %}
 {% load static %}
+{% load component_tags %}
 
 {% block content %}
 <h2>Список материнских плат</h2>
@@ -51,10 +53,22 @@
             {% endif %}
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{ motherboard.manufacturer }} {{ motherboard.model }}</h5>
-                <p class="card-text mb-4">
+                <p class="card-text mb-2">
                     <strong>Сокет:</strong> {{ motherboard.socket }}<br>
                     <strong>Цена:</strong> {{ motherboard.price }} ₽
                 </p>
+
+                {% with stock_item=stock_dict|get_item:motherboard.id %}
+                    {% if stock_item %}
+                        {% if stock_item.quantity > 0 %}
+                            <p class="text-success">В наличии</p>
+                        {% else %}
+                            <p class="text-danger fw-bold">Товара временно нет в наличии</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Информация о наличии отсутствует</p>
+                    {% endif %}
+
                 <a href="{% url 'components:motherboard_detail' motherboard.pk %}"
                    class="btn btn-primary mt-auto mb-3">Подробнее</a>
                 <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form"
@@ -67,8 +81,9 @@
                         <input type="number" class="form-control" id="quantity-{{ motherboard.pk }}" name="quantity"
                                value="1" min="1">
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Добавить в корзину</button>
+                     <button type="submit" class="btn btn-success w-100"{% if not stock_item or stock_item.quantity == 0 %} disabled{% endif %}>Добавить в корзину</button>
                 </form>
+                {% endwith %}
                 <div class="added-message text-success mt-2" id="added-message-{{ motherboard.pk }}"
                      style="display: none; font-weight: 600;">
                     Товар в корзине
@@ -161,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         messageElem.style.display = 'none';
                     }, 3000);
                 } else {
-                    alert(data.error || 'Не удалось добавить товар');
+                    alert('Ошибка при добавлении товара в корзину');
                 }
             })
             .catch(error => {
@@ -174,4 +189,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% endblock %}
-

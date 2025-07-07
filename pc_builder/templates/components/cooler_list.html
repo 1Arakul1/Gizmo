@@ -1,6 +1,7 @@
 <!-- templates/components/cooler_list.html -->
 {% extends "base.html" %}
 {% load static %}
+{% load component_tags %}
 
 {% block content %}
 <h2>Список кулеров</h2>
@@ -59,6 +60,18 @@
                     <strong>Тип:</strong> {{ cooler.get_cooler_type_display }}<br>
                     <strong>Цена:</strong> {{ cooler.price }} ₽
                 </p>
+
+                  {% with stock_item=stock_dict|get_item:cooler.id %}
+                    {% if stock_item %}
+                        {% if stock_item.quantity > 0 %}
+                            <p class="text-success">В наличии</p>
+                        {% else %}
+                            <p class="text-danger fw-bold">Товара временно нет в наличии</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Информация о наличии отсутствует</p>
+                    {% endif %}
+
                 <a href="{% url 'components:cooler_detail' cooler.pk %}" class="btn btn-primary btn-sm">Подробнее</a>
 
                 <!-- Форма добавления в корзину -->
@@ -72,14 +85,19 @@
                         <input type="number" class="form-control" id="quantity-{{ cooler.pk }}" name="quantity"
                                value="1" min="1">
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Добавить в корзину</button>
+                     <button type="submit" class="btn btn-success w-100"{% if not stock_item or stock_item.quantity == 0 %} disabled{% endif %}>Добавить в корзину</button>
                     <div class="added-message text-success mt-2" id="added-message-{{ cooler.pk }}"
                          style="display: none; font-weight: 600;">
                         Товар в корзине
                     </div>
+                     {% endwith %}
                 </form>
             </div>
         </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>Кулеры не найдены.</p>
     </div>
     {% endfor %}
 </div>
@@ -175,4 +193,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% endblock %}
-

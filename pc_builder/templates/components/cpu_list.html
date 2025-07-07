@@ -1,8 +1,7 @@
 <!-- components/templates/components/cpu_list.html -->
-<!-- components/templates/components/cpu_list.html -->
 {% extends "base.html" %}
 {% load static %}
-
+{% load component_tags %}
 {% block content %}
 <h2 class="animate__animated animate__fadeIn">Список процессоров</h2>
 
@@ -45,23 +44,39 @@
             {% endif %}
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title animate__animated animate__bounceIn animate-delay-05">{{ cpu.manufacturer }} {{ cpu.model }}</h5>
-                <p class="card-text mb-4 animate__animated animate__fadeIn animate-delay-07">
+                <p class="card-text mb-2 animate__animated animate__fadeIn animate-delay-07">
                     <strong>Частота:</strong> {{ cpu.frequency }} GHz<br>
                     <strong>Ядер:</strong> {{ cpu.cores }}<br>
                     <strong>Цена:</strong> {{ cpu.price }} ₽
                 </p>
-                <a href="{% url 'components:cpu_detail' cpu.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
-                <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form" data-cpu-id="{{ cpu.pk }}">
-                    {% csrf_token %}
-                    <input type="hidden" name="component_type" value="cpu">
-                    <input type="hidden" name="component_id" value="{{ cpu.pk }}">
-                    <div class="form-group mb-2">
-                        <label for="quantity-{{ cpu.pk }}">Количество:</label>
-                        <input type="number" class="form-control" id="quantity-{{ cpu.pk }}" name="quantity" value="1"
-                            min="1">
-                    </div>
-                    <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11">Добавить в корзину</button>
-                </form>
+
+                {% with stock_item=stock_dict|get_item:cpu.id %}
+                    {% if stock_item %}
+                        {% if stock_item.quantity > 0 %}
+                            <p class="text-success">В наличии</p>
+                        {% else %}
+                            <p class="text-danger fw-bold">Товара временно нет в наличии</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Информация о наличии отсутствует</p>
+                    {% endif %}
+
+                    <a href="{% url 'components:cpu_detail' cpu.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
+                    <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form" data-cpu-id="{{ cpu.pk }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="component_type" value="cpu">
+                        <input type="hidden" name="component_id" value="{{ cpu.pk }}">
+                        <div class="form-group mb-2">
+                            <label for="quantity-{{ cpu.pk }}">Количество:</label>
+                            <input type="number" class="form-control" id="quantity-{{ cpu.pk }}" name="quantity" value="1" min="1">
+                        </div>
+                        {% if stock_item %}
+                            <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" {% if stock_item.quantity == 0 %}disabled{% endif %}>Добавить в корзину</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" disabled>Добавить в корзину</button>
+                        {% endif %}
+                    </form>
+                {% endwith %}
 
                 <div class="added-message text-success mt-2 animate__animated animate__fadeIn animate-delay-13" id="added-message-{{ cpu.pk }}"
                     style="display: none; font-weight: 600;">

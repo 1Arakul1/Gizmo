@@ -25,4 +25,5 @@ urlpatterns = [
     path('get_compatible_cpu/', views.get_compatible_cpu, name='get_compatible_cpu'),
     path('employee/returns/', views.employee_return_requests, name='employee_return_requests'),
     path('employee/returns/<int:return_request_id>/', views.employee_process_return, name='employee_process_return'),
+    path('employee/out-of-stock/', views.employee_out_of_stock_list, name='employee_out_of_stock_list'),
 ]

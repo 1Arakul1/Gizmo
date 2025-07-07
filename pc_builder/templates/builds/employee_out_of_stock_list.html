@@ -1,0 +1,35 @@
+<!-- builds/templates/builds/employee_out_of_stock_list.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Товары, отсутствующие на складе</h2>
+    <p>Список товаров, которых в данный момент нет в наличии.</p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Тип компонента</th>
+                <th>Компонент</th>
+                <th>Количество</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in out_of_stock_items %}
+                <tr>
+                    <td>{{ item.get_component_type_display }}</td>
+                    <td>{{ item.get_component_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Все товары в наличии!</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'builds:employee_order_list' %}" class="btn btn-secondary">Вернуться к списку заказов</a>
+</div>
+{% endblock %}

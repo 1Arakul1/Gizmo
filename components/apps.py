@@ -7,4 +7,4 @@ class ComponentsConfig(AppConfig):
     name = 'components'
 
     def ready(self):
-        pass
+        import components.signals  # noqa: F401

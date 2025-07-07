@@ -2,10 +2,11 @@
 import json
 import logging
 from decimal import Decimal
-from users.models import Balance, Transaction 
+from components.models import Stock
+from users.models import Balance, Transaction
 from django.conf import settings
 from django.contrib import messages
-from django.db import transaction 
+from django.db import transaction
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.sessions.models import Session
 from django.core.exceptions import (
@@ -35,7 +36,6 @@ from django.utils import timezone
 
 from django.views.decorators.http import require_POST
 
-
 from .forms import OrderUpdateForm
 from .models import (
     Build,
@@ -53,6 +53,7 @@ from components.models import (
     PSU,
     Case,
     Cooler,
+    Stock,  # Import Stock model
 )
 from users.utils import send_order_status_email
 
@@ -390,26 +391,59 @@ def build_create(request):
         case_id = request.POST.get('case')
         cooler_id = request.POST.get('cooler')
 
-        # Получаем объекты компонентов
-        try:
-            cpu = get_object_or_404(CPU, pk=cpu_id) if cpu_id else None
-            gpu = get_object_or_404(GPU, pk=gpu_id) if gpu_id else None
-            motherboard = (
-                get_object_or_404(Motherboard, pk=motherboard_id)
-                if motherboard_id
-                else None
-            )
-            ram = get_object_or_404(RAM, pk=ram_id) if ram_id else None
-            storage = get_object_or_404(Storage, pk=storage_id) if storage_id else None
-            psu = get_object_or_404(PSU, pk=psu_id) if psu_id else None
-            case = get_object_or_404(Case, pk=case_id) if case_id else None
-            cooler = get_object_or_404(Cooler, pk=cooler_id) if cooler_id else None
-        except (ValueError, TypeError, ObjectDoesNotExist):
+        # Функция для проверки наличия и получения компонента
+        def get_component_if_in_stock(model, component_id):
+            if not component_id:
+                return None
+            try:
+                component = get_object_or_404(model, pk=component_id)
+                # Проверяем наличие через Stock
+                try:
+                    stock = Stock.objects.get(component_type=model._meta.model_name, component_id=component_id)
+                    if stock.quantity > 0:
+                        return component
+                    else:
+                        return None  # Товар не в наличии
+                except Stock.DoesNotExist:
+                    return None # Stock object doesn't exist
+            except (ValueError, TypeError, ObjectDoesNotExist):
+                return None
+
+        # Получаем объекты компонентов с проверкой наличия
+        cpu = get_component_if_in_stock(CPU, cpu_id)
+        gpu = get_component_if_in_stock(GPU, gpu_id)
+        motherboard = get_component_if_in_stock(Motherboard, motherboard_id)
+        ram = get_component_if_in_stock(RAM, ram_id)
+        storage = get_component_if_in_stock(Storage, storage_id)
+        psu = get_component_if_in_stock(PSU, psu_id)
+        case = get_component_if_in_stock(Case, case_id)
+        cooler = get_component_if_in_stock(Cooler, cooler_id)
+
+        # Проверяем, что все компоненты в наличии
+        missing_components = []
+        if cpu_id and not cpu:
+            missing_components.append('Процессор')
+        if gpu_id and not gpu:
+            missing_components.append('Видеокарта')
+        if motherboard_id and not motherboard:
+            missing_components.append('Материнская плата')
+        if ram_id and not ram:
+            missing_components.append('Оперативная память')
+        if storage_id and not storage:
+            missing_components.append('Накопитель')
+        if psu_id and not psu:
+            missing_components.append('Блок питания')
+        if case_id and not case:
+            missing_components.append('Корпус')
+        if cooler_id and not cooler:
+            missing_components.append('Охлаждение')
+
+        if missing_components:
             return render(
                 request,
                 'builds/build_create.html',
                 {
-                    'error_message': 'Один из выбранных компонентов не найден.',
+                    'error_message': f'Следующие компоненты отсутствуют на складе: {", ".join(missing_components)}',
                     'cpus': CPU.objects.all(),
                     'gpus': GPU.objects.all(),
                     'motherboards': Motherboard.objects.all(),
@@ -429,8 +463,6 @@ def build_create(request):
                 error_message = 'Процессор не совместим с материнской платой.'
 
         if motherboard and ram:
-            print(f"Motherboard type: {motherboard.ram_type}, RAM type: {ram.type}")
-            print(f"Motherboard max freq: {motherboard.max_ram_frequency}, RAM freq: {ram.frequency}")
             if not motherboard.is_compatible_with_ram(ram):
                 error_message = 'Оперативная память не совместима с материнской платой.'
 
@@ -462,16 +494,7 @@ def build_create(request):
         # Создаем сборку
         total_price = sum(
             component.price
-            for component in [
-                cpu,
-                gpu,
-                motherboard,
-                ram,
-                storage,
-                psu,
-                case,
-                cooler,
-            ]
+            for component in [cpu, gpu, motherboard, ram, storage, psu, case, cooler]
             if component and component.price is not None
         )
 
@@ -485,8 +508,8 @@ def build_create(request):
             psu=psu,
             case=case,
             cooler=cooler,
-            total_price=total_price,
         )
+
         try:
             build.save()
             return redirect('builds:build_detail', pk=build.pk)
@@ -506,16 +529,22 @@ def build_create(request):
                     'coolers': Cooler.objects.all(),
                 },
             )
-
     else:
-        cpus = CPU.objects.all()
-        gpus = GPU.objects.all()
-        motherboards = Motherboard.objects.all()
-        rams = RAM.objects.all()
-        storages = Storage.objects.all()
-        psus = PSU.objects.all()
-        cases = Case.objects.all()
-        coolers = Cooler.objects.all()
+        # Get components that are in stock
+        def get_in_stock_components(model):
+            model_name = model._meta.model_name
+            in_stock_ids = Stock.objects.filter(component_type=model_name, quantity__gt=0).values_list('component_id', flat=True)
+            return model.objects.filter(id__in=in_stock_ids)
+
+        cpus = get_in_stock_components(CPU)
+        gpus = get_in_stock_components(GPU)
+        motherboards = get_in_stock_components(Motherboard)
+        rams = get_in_stock_components(RAM)
+        storages = get_in_stock_components(Storage)
+        psus = get_in_stock_components(PSU)
+        cases = get_in_stock_components(Case)
+        coolers = get_in_stock_components(Cooler)
+
         context = {
             'cpus': cpus,
             'gpus': gpus,
@@ -820,6 +849,10 @@ def employee_order_list(request):
         status='pending'
     ).count()  # Учитываем только "pending"
 
+    # Получаем количество товаров, отсутствующих на складе
+    out_of_stock_count = request.GET.get('out_of_stock_count', Stock.objects.filter(quantity=0).count())
+
+
     return render(
         request,
         'builds/employee_order_list.html',
@@ -827,6 +860,7 @@ def employee_order_list(request):
             'page_obj': page_obj,
             'query': query,
             'return_request_count': return_request_count,
+            'out_of_stock_count': out_of_stock_count,
         },  # Добавляем return_request_count
     )
 
@@ -1209,3 +1243,15 @@ def get_compatible_cpu(request):
             return JsonResponse({'error': 'Motherboard не найдена'}, status=404)
     else:
         return JsonResponse({'error': 'Не указан Motherboard ID'}, status=400)
+    
+@login_required
+@user_passes_test(is_employee)
+def employee_out_of_stock_list(request):
+    """Представление для отображения списка товаров, которых нет в наличии."""
+    out_of_stock_items = Stock.objects.filter(quantity=0)
+
+    return render(
+        request,
+        'builds/employee_out_of_stock_list.html',
+        {'out_of_stock_items': out_of_stock_items},
+    )
