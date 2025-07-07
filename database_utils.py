@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# database_utils.py
 """
 Скрипт для создания базы данных MS SQL Server.
 

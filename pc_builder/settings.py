@@ -32,13 +32,11 @@ load_dotenv()
 
 Использует переменные окружения для большей гибкости и безопасности.
 """
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
-DEBUG = True  # В production должно быть False
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '178.206.2.177']  # Замени на свой IP
 
-# Application definition
-# settings.py
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
+DEBUG = True  
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '178.206.2.177'] 
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -92,12 +90,9 @@ TEMPLATES = [
         },
     },
 ]
-# settings.py
 
 WSGI_APPLICATION = 'pc_builder.wsgi.application'  # Убедись, что это правильно!
 
-# Database
-# settings.py
 
 DATABASES = {
     'default': {
@@ -149,7 +144,7 @@ INTERNAL_IPS = [
 INTERNAL_IPS = ["*"]
 
 
-# Static files (CSS, JavaScript, Images)
+
 STATIC_URL = '/static/'  # Важно, чтобы начинался и заканчивался слэшем
 STATICFILES_DIRS = [
     BASE_DIR.parent / 'static',  # Используй .parent, чтобы подняться на уровень выше
@@ -300,8 +295,7 @@ CACHE_MIDDLEWARE_IGNORE_PATHS = [
     '/components/stock_list/',
     '/builds/checkout/',
     '/builds/employee_order_list/',
-    # Добавьте это!  Убедитесь, что URL правильный
-    # ... другие URL-адреса, связанные с пользователем ...
+   
 ]
 
-CACHE_MIDDLEWARE_KEY_PREFIX = 'employee_order_list_'  # Или что-то другое, уникальное
+CACHE_MIDDLEWARE_KEY_PREFIX = 'employee_order_list_' 
