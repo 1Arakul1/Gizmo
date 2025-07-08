@@ -335,6 +335,7 @@ def add_to_cart(request):
             return redirect('builds:cart')
 
 
+
 @login_required
 def remove_from_cart(request, item_id):
     """Удаление товара из корзины."""

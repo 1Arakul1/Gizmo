@@ -65,7 +65,7 @@
                 <button type="submit" class="btn btn-primary">Отправить отзыв</button>
             </form>
         {% else %}
-            <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a>, чтобы оставить отзыв.</p>
+            <p>Пожалуйста, <a href="{% url 'users:login' %}">войдите</a>, чтобы оставить отзыв.</p>
         {% endif %}
     </div>
 

@@ -4,10 +4,10 @@
 {% load component_tags %}
 
 {% block content %}
-<h2>Список блоков питания</h2>
+<h2 class="animate__animated animate__fadeIn">Список блоков питания</h2>
 
 <!-- Форма поиска -->
-<form method="get" class="mb-3">
+<form method="get" class="mb-3 animate__animated animate__fadeIn">
     <div class="input-group mb-3">
         <input type="text" class="form-control" placeholder="Поиск блока питания..." name="q"
                value="{{ form.q.value|default:'' }}">
@@ -44,17 +44,17 @@
 
 <div class="row row-cols-1 row-cols-md-3 g-4">
     {% for psu in psus %}
-    <div class="col">
+    <div class="col animate__animated animate__zoomIn animate-delay-01">
         <div class="card h-100 psu-card">
             {% if psu.image %}
-            <img src="{{ psu.image.url }}" class="card-img-top" alt="{{ psu.model }}" style="object-fit: contain;">
+            <img src="{{ psu.image.url }}" class="card-img-top psu-image animate__animated animate__fadeIn animate-delay-03" alt="{{ psu.model }}" style="object-fit: contain;">
             {% else %}
-            <img src="{{ psu.image.url }}" class="card-img-top" alt="No Image"
+            <img src="{{ psu.image.url }}" class="card-img-top psu-image animate__animated animate__fadeIn animate-delay-03" alt="No Image"
                  style="object-fit: contain;">
             {% endif %}
             <div class="card-body d-flex flex-column">
-                <h5 class="card-title">{{ psu.manufacturer }} {{ psu.model }}</h5>
-                <p class="card-text mb-2">
+                <h5 class="card-title animate__animated animate__bounceIn animate-delay-05">{{ psu.manufacturer }} {{ psu.model }}</h5>
+                <p class="card-text mb-2 animate__animated animate__fadeIn animate-delay-07">
                     <strong>Мощность:</strong> {{ psu.power }} Вт<br>
                     <strong>Цена:</strong> {{ psu.price }} ₽
                 </p>
@@ -70,7 +70,9 @@
                         <p class="text-muted">Информация о наличии отсутствует</p>
                     {% endif %}
 
-                <a href="{% url 'components:psu_detail' psu.pk %}" class="btn btn-primary mt-auto mb-3">Подробнее</a>
+                <a href="{% url 'components:psu_detail' psu.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
+
+                 {% if user.is_authenticated %}
                 <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form"
                       data-psu-id="{{ psu.pk }}">
                     {% csrf_token %}
@@ -81,10 +83,16 @@
                         <input type="number" class="form-control" id="quantity-psu-{{ psu.pk }}" name="quantity"
                                value="1" min="1">
                     </div>
-                     <button type="submit" class="btn btn-success w-100"{% if not stock_item or stock_item.quantity == 0 %} disabled{% endif %}>Добавить в корзину</button>
+                     <button type="submit" class="btn btn-success w-100 animate__animated animate__fadeIn animate-delay-11"{% if not stock_item or stock_item.quantity == 0 %} disabled{% endif %}>Добавить в корзину</button>
                 </form>
+                 {% else %}
+                    <p>
+                        <a href="{% url 'users:register' %}">Зарегистрируйтесь</a> или
+                        <a href="{% url 'users:login' %}">войдите</a>, чтобы добавить товар в корзину.
+                    </p>
+                {% endif %}
                  {% endwith %}
-                <div class="added-message text-success mt-2" id="added-message-psu-{{ psu.pk }}"
+                <div class="added-message text-success mt-2 animate__animated animate__fadeIn animate-delay-13" id="added-message-psu-{{ psu.pk }}"
                      style="display: none; font-weight: 600;">
                     Товар в корзине
                 </div>
@@ -99,7 +107,7 @@
 </div>
 
 {% if psus.has_other_pages %}
-<nav aria-label="Page navigation" class="mt-4">
+<nav aria-label="Page navigation" class="mt-4 animate__animated animate__fadeIn">
     <ul class="pagination justify-content-center">
         {% if psus.has_previous %}
         <li class="page-item">
@@ -176,7 +184,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         messageElem.style.display = 'none';
                     }, 3000);
                 } else {
-                    alert('Ошибка при добавлении товара в корзину');
+                    if (data.error === 'Необходимо войти в систему.') {
+                        alert('Для добавления товара в корзину необходимо войти в систему.');
+                    }
+                    else {
+                        alert(data.error || 'Не удалось добавить товар');
+                    }
                 }
             })
             .catch(error => {

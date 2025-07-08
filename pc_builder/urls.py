@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('__debug__/', include('debug_toolbar.urls')),
     path('admin/', admin.site.urls),
-    path('users/', include('users.urls', namespace='users')), # <<-- Оставляем это
+    path('users/', include('users.urls')), # <<-- Оставляем это
     path('', views.index, name='index'),  # Добавь этот путь
     path('components/', include('components.urls', namespace='components')),  # Раскомментируй и проверь
     path('builds/', include('builds.urls', namespace='builds')),  # Раскомментируй и проверь

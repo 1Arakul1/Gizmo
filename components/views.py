@@ -352,6 +352,7 @@ def cooler_list(request):
     )
 
 
+
 def cpu_detail(request, pk):
     cpu = get_object_or_404(CPU, pk=pk)
     review_form = ReviewForm()
