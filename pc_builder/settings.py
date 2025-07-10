@@ -35,7 +35,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
 DEBUG = True  
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '178.206.2.177'] 
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '188.225.127.177'] 
 
 
 INSTALLED_APPS = [
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'fps_data',
     'debug_toolbar',
     'widget_tweaks',
+    
 ]
 
 MIDDLEWARE = [

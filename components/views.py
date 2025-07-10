@@ -39,22 +39,38 @@ def cpu_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         socket = form.cleaned_data.get('socket')
         integrated_graphics = form.cleaned_data.get('integrated_graphics')
+        sort = form.cleaned_data.get('sort')  # Получаем значение сортировки
 
         if q:
             cpus_list = cpus_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            cpus_list = cpus_list.filter(manufacturer=manufacturer)
+
+        if manufacturers:
+            cpus_list = cpus_list.filter(manufacturer__id__in=manufacturers)
+
         if socket:
             cpus_list = cpus_list.filter(socket__icontains=socket)
+
         if integrated_graphics:
             cpus_list = cpus_list.filter(integrated_graphics=True)
 
-    # Get all Stock objects for CPUs
+    # Сортировка по параметру sort
+    if sort == 'price_asc':
+        cpus_list = cpus_list.order_by('price')
+    elif sort == 'price_desc':
+        cpus_list = cpus_list.order_by('-price')
+    elif sort == 'frequency_desc':
+        cpus_list = cpus_list.order_by('-frequency')
+    else:
+        # По умолчанию — популярность (например, по количеству заказов или рейтингу)
+        # Если у вас нет поля популярности, можно убрать или заменить на id
+        cpus_list = cpus_list.order_by('-id')
+
+    # Получаем наличие из Stock
     stock_items = Stock.objects.filter(component_type='cpu')
     stock_dict = {item.component_id: item for item in stock_items}
 
@@ -67,9 +83,12 @@ def cpu_list(request):
     except EmptyPage:
         cpus = paginator.page(paginator.num_pages)
 
-    return render(
-        request, 'components/cpu_list.html', {'cpus': cpus, 'form': form, 'stock_dict': stock_dict}
-    )
+    context = {
+        'cpus': cpus,
+        'form': form,
+        'stock_dict': stock_dict,
+    }
+    return render(request, 'components/cpu_list.html', context)
 
 
 def gpu_list(request):
@@ -78,7 +97,7 @@ def gpu_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         memory = form.cleaned_data.get('memory')
         interface = form.cleaned_data.get('interface')
 
@@ -86,8 +105,8 @@ def gpu_list(request):
             gpus_list = gpus_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            gpus_list = gpus_list.filter(manufacturer=manufacturer)
+        if manufacturers:
+            gpus_list = gpus_list.filter(manufacturer__id__in=manufacturers)
         if memory:
             gpus_list = gpus_list.filter(memory=memory)
         if interface:
@@ -117,7 +136,7 @@ def motherboard_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         socket = form.cleaned_data.get('socket')
         form_factor = form.cleaned_data.get('form_factor')
 
@@ -125,8 +144,8 @@ def motherboard_list(request):
             motherboards_list = motherboards_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            motherboards_list = motherboards_list.filter(manufacturer=manufacturer)
+        if manufacturers:
+            motherboards_list = motherboards_list.filter(manufacturer__id__in=manufacturers)
         if socket:
             motherboards_list = motherboards_list.filter(socket__icontains=socket)
         if form_factor:
@@ -160,7 +179,7 @@ def ram_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         type = form.cleaned_data.get('type')
         capacity = form.cleaned_data.get('capacity')
 
@@ -168,8 +187,8 @@ def ram_list(request):
             rams_list = rams_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            rams_list = rams_list.filter(manufacturer=manufacturer)
+        if manufacturers:
+            rams_list = rams_list.filter(manufacturer__id__in=manufacturers)
         if type:
             rams_list = rams_list.filter(type__icontains=type)
         if capacity:
@@ -199,7 +218,7 @@ def storage_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         type = form.cleaned_data.get('type')
         capacity = form.cleaned_data.get('capacity')
 
@@ -207,8 +226,8 @@ def storage_list(request):
             storages_list = storages_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            storages_list = storages_list.filter(manufacturer=manufacturer)
+        if manufacturers:
+            storages_list = storages_list.filter(manufacturer__id__in=manufacturers)
         if type:
             storages_list = storages_list.filter(type__icontains=type)
         if capacity:
@@ -240,7 +259,7 @@ def psu_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         power = form.cleaned_data.get('power')
         certification = form.cleaned_data.get('certification')
 
@@ -248,8 +267,8 @@ def psu_list(request):
             psus_list = psus_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            psus_list = psus_list.filter(manufacturer=manufacturer)
+        if manufacturers:
+            psus_list = psus_list.filter(manufacturer__id__in=manufacturers)
         if power:
             psus_list = psus_list.filter(power=power)
         if certification:
@@ -277,20 +296,23 @@ def case_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         form_factor = form.cleaned_data.get('form_factor')
         dimensions = form.cleaned_data.get('dimensions')
+        side_panel_window = form.cleaned_data.get('side_panel_window')
 
         if q:
             cases_list = cases_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:
-            cases_list = cases_list.filter(manufacturer=manufacturer)
+        if manufacturers:
+            cases_list = cases_list.filter(manufacturer__id__in=manufacturers)
         if form_factor:
             cases_list = cases_list.filter(form_factor__icontains=form_factor)
         if dimensions:
             cases_list = cases_list.filter(dimensions__icontains=dimensions)
+        if side_panel_window:
+            cases_list = cases_list.filter(side_panel_window=True)
 
     # Get all Stock objects for Cases
     stock_items = Stock.objects.filter(component_type='case')
@@ -314,7 +336,7 @@ def cooler_list(request):
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
-        manufacturer = form.cleaned_data.get('manufacturer')
+        manufacturers = form.cleaned_data.get('manufacturer')
         cooler_type = form.cleaned_data.get('cooler_type')
         fan_size = form.cleaned_data.get('fan_size')
         rgb = form.cleaned_data.get('rgb')
@@ -323,8 +345,8 @@ def cooler_list(request):
             coolers_list = coolers_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
             ).distinct()
-        if manufacturer:  # Check if manufacturer is selected
-            coolers_list = coolers_list.filter(manufacturer=manufacturer)
+        if manufacturers:  # Check if manufacturer is selected
+            coolers_list = coolers_list.filter(manufacturer__id__in=manufacturers)
         if cooler_type:
             coolers_list = coolers_list.filter(cooler_type=cooler_type)
         if fan_size:
@@ -350,7 +372,6 @@ def cooler_list(request):
         'components/cooler_list.html',
         {'coolers': coolers, 'form': form, 'stock_dict': stock_dict},
     )
-
 
 
 def cpu_detail(request, pk):

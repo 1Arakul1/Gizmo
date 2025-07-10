@@ -1,196 +1,225 @@
-<!-- components/templates/components/cpu_list.html -->
-<!-- components/templates/components/cpu_list.html -->
 {% extends "base.html" %}
 {% load static %}
 {% load component_tags %}
+{% load widget_tweaks %}
+
 {% block content %}
-<h2 class="animate__animated animate__fadeIn">Список процессоров</h2>
+    <div class="container my-4">
+        <h2 class="mb-4 animate__animated animate__fadeIn">Список процессоров</h2>
 
-<form method="get" class="mb-4 animate__animated animate__fadeIn">
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="Поиск процессора..." name="q" value="{{ form.q.value|default:'' }}">
-        <button class="btn btn-outline-secondary" type="submit">Поиск</button>
-    </div>
+        <div class="row">
+            <!-- Sidebar фильтров -->
+            <aside class="col-lg-3 mb-4">
+                <form method="get" id="filter-form" class="animate__animated animate__fadeIn">
 
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label for="{{ form.manufacturer.id_for_label }}" class="form-label">Производитель:</label>
-            {{ form.manufacturer }}
-        </div>
-        <div class="col-md-4">
-            <label for="{{ form.socket.id_for_label }}" class="form-label">Сокет:</label>
-            <input type="text" class="form-control" id="{{ form.socket.id_for_label }}" name="{{ form.socket.name }}" value="{{ form.socket.value|default:'' }}">
-        </div>
-        <div class="col-md-4">
-            <div class="form-check">
-                {{ form.integrated_graphics }}
-                <label class="form-check-label" for="{{ form.integrated_graphics.id_for_label }}">
-                    Интегрированное графическое ядро
-                </label>
-            </div>
-        </div>
-    </div>
+                    <!-- Поиск -->
+                    <div class="mb-3">
+                        <label for="search" class="form-label fw-bold">Поиск</label>
+                        <input type="text" id="search" name="q" placeholder="Поиск процессора..."
+                               class="form-control" value="{{ form.q.value|default_if_none:'' }}">
+                    </div>
 
-    <button class="btn btn-primary" type="submit">Применить фильтры</button>
-</form>
-
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    {% for cpu in cpus %}
-    <div class="col animate__animated animate__zoomIn animate-delay-01">
-        <div class="card h-100 cpu-card">
-            {% if cpu.image %}
-            <img src="{{ cpu.image.url }}" class="card-img-top cpu-image animate__animated animate__fadeIn animate-delay-03" alt="{{ cpu.model }}">
-            {% else %}
-            <img src="{{ cpu.image.url }}" class="card-img-top cpu-image animate__animated animate__fadeIn animate-delay-03" alt="No Image">
-            {% endif %}
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title animate__animated animate__bounceIn animate-delay-05">{{ cpu.manufacturer }} {{ cpu.model }}</h5>
-                <p class="card-text mb-2 animate__animated animate__fadeIn animate-delay-07">
-                    <strong>Частота:</strong> {{ cpu.frequency }} GHz<br>
-                    <strong>Ядер:</strong> {{ cpu.cores }}<br>
-                    <strong>Цена:</strong> {{ cpu.price }} ₽
-                </p>
-
-                {% with stock_item=stock_dict|get_item:cpu.id %}
-                    {% if stock_item %}
-                        {% if stock_item.quantity > 0 %}
-                            <p class="text-success">В наличии</p>
-                        {% else %}
-                            <p class="text-danger fw-bold">Товара временно нет в наличии</p>
-                        {% endif %}
-                    {% else %}
-                        <p class="text-muted">Информация о наличии отсутствует</p>
-                    {% endif %}
-
-                    <a href="{% url 'components:cpu_detail' cpu.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
-
-                    {% if user.is_authenticated %}
-                        <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form" data-cpu-id="{{ cpu.pk }}">
-                            {% csrf_token %}
-                            <input type="hidden" name="component_type" value="cpu">
-                            <input type="hidden" name="component_id" value="{{ cpu.pk }}">
-                            <div class="form-group mb-2">
-                                <label for="quantity-{{ cpu.pk }}">Количество:</label>
-                                <input type="number" class="form-control" id="quantity-{{ cpu.pk }}" name="quantity" value="1" min="1">
+                    <!-- Производитель -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Производитель</label>
+                        {% for choice in form.manufacturer.field.choices %}
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="{{ form.manufacturer.name }}"
+                                       value="{{ choice.0 }}"
+                                       id="manufacturer_{{ forloop.counter }}"
+                                        {% if form.manufacturer.value and choice.0 in form.manufacturer.value %}checked{% endif %}>
+                                <label class="form-check-label" for="manufacturer_{{ forloop.counter }}">
+                                    {{ choice.1 }}
+                                </label>
                             </div>
-                            {% if stock_item %}
-                                <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" {% if stock_item.quantity == 0 %}disabled{% endif %}>Добавить в корзину</button>
-                            {% else %}
-                                <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" disabled>Добавить в корзину</button>
-                            {% endif %}
-                        </form>
+                        {% endfor %}
+                    </div>
 
-                        <div class="added-message text-success mt-2 animate__animated animate__fadeIn animate-delay-13" id="added-message-{{ cpu.pk }}"
-                            style="display: none; font-weight: 600;">
-                            Товар в корзине
+                    <!-- Сокет -->
+                    <div class="mb-3">
+                        <label for="socket" class="form-label fw-bold">Сокет</label>
+                        <input type="text" class="form-control" id="socket" name="{{ form.socket.name }}"
+                               value="{{ form.socket.value|default_if_none:'' }}" placeholder="Например, LGA1151">
+                    </div>
+
+                    <!-- Интегрированное графическое ядро -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="integrated_graphics"
+                               name="{{ form.integrated_graphics.name }}" value="true"
+                                {% if form.integrated_graphics.value %}checked{% endif %}>
+                        <label class="form-check-label" for="integrated_graphics">Интегрированное графическое ядро</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
+                </form>
+            </aside>
+
+            <!-- Основной контент: список процессоров -->
+            <section class="col-lg-9">
+
+                <!-- Список процессоров -->
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    {% for cpu in cpus %}
+                        <div class="col animate__animated animate__zoomIn animate-delay-01">
+                            <div class="card h-100 cpu-card">
+                                {% if cpu.image %}
+                                    <img src="{{ cpu.image.url }}" class="card-img-top cpu-image animate__animated animate__fadeIn animate-delay-03" alt="{{ cpu.model }}">
+                                {% else %}
+                                    <img src="{{ cpu.image.url }}" class="card-img-top cpu-image animate__animated animate__fadeIn animate-delay-03" alt="No Image">
+                                {% endif %}
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title animate__animated animate__bounceIn animate-delay-05">{{ cpu.manufacturer }} {{ cpu.model }}</h5>
+                                    <p class="card-text mb-2 animate__animated animate__fadeIn animate-delay-07">
+                                        <strong>Частота:</strong> {{ cpu.frequency }} GHz<br>
+                                        <strong>Ядер:</strong> {{ cpu.cores }}<br>
+                                        <strong>Цена:</strong> {{ cpu.price }} ₽
+                                    </p>
+
+                                    {% with stock_item=stock_dict|get_item:cpu.id %}
+                                        {% if stock_item %}
+                                            {% if stock_item.quantity > 0 %}
+                                                <p class="text-success">В наличии</p>
+                                            {% else %}
+                                                <p class="text-danger fw-bold">Товара временно нет в наличии</p>
+                                            {% endif %}
+                                        {% else %}
+                                            <p class="text-muted">Информация о наличии отсутствует</p>
+                                        {% endif %}
+
+                                        <a href="{% url 'components:cpu_detail' cpu.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
+
+                                        {% if user.is_authenticated %}
+                                            <form method="post" action="{% url 'builds:add_to_cart' %}" class="add-to-cart-form" data-cpu-id="{{ cpu.pk }}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="component_type" value="cpu">
+                                                <input type="hidden" name="component_id" value="{{ cpu.pk }}">
+                                                <div class="form-group mb-2">
+                                                    <label for="quantity-{{ cpu.pk }}">Количество:</label>
+                                                    <input type="number" class="form-control" id="quantity-{{ cpu.pk }}" name="quantity" value="1" min="1">
+                                                </div>
+                                                {% if stock_item %}
+                                                    <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" {% if stock_item.quantity == 0 %}disabled{% endif %}>Добавить в корзину</button>
+                                                {% else %}
+                                                    <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" disabled>Добавить в корзину</button>
+                                                {% endif %}
+                                            </form>
+
+                                            <div class="added-message text-success mt-2 animate__animated animate__fadeIn animate-delay-13" id="added-message-{{ cpu.pk }}"
+                                                 style="display: none; font-weight: 600;">
+                                                Товар в корзине
+                                            </div>
+                                        {% else %}
+                                            <p>
+                                                <a href="{% url 'users:register' %}">Зарегистрируйтесь</a> или
+                                                <a href="{% url 'users:login' %}">войдите</a>, чтобы добавить товар в корзину.
+                                            </p>
+                                        {% endif %}
+
+                                    {% endwith %}
+                                </div>
+                            </div>
                         </div>
-                    {% else %}
-                        <p>
-                            <a href="{% url 'users:register' %}">Зарегистрируйтесь</a> или
-                            <a href="{% url 'users:login' %}">войдите</a>, чтобы добавить товар в корзину.
-                        </p>
-                    {% endif %}
+                    {% empty %}
+                        <div class="col-12">
+                            <p>Процессоры не найдены.</p>
+                        </div>
+                    {% endfor %}
+                </div>
 
-                {% endwith %}
-            </div>
+                {% if cpus.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4 animate__animated animate__fadeIn">
+                        <ul class="pagination justify-content-center">
+                            {% if cpus.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cpus.previous_page_number }}" aria-label="Предыдущая">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;</span>
+                                </li>
+                            {% endif %}
+
+                            {% for num in cpus.paginator.page_range %}
+                                {% if cpus.number == num %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if cpus.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cpus.next_page_number }}" aria-label="Следующая">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </section>
         </div>
     </div>
-    {% empty %}
-    <div class="col-12">
-        <p>Процессоры не найдены.</p>
-    </div>
-    {% endfor %}
-</div>
 
-{% if cpus.has_other_pages %}
-<nav aria-label="Page navigation" class="mt-4 animate__animated animate__fadeIn">
-    <ul class="pagination justify-content-center">
-        {% if cpus.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cpus.previous_page_number }}" aria-label="Предыдущая">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">&laquo;</span>
-        </li>
-        {% endif %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const forms = document.querySelectorAll('.add-to-cart-form');
 
-        {% for num in cpus.paginator.page_range %}
-        {% if cpus.number == num %}
-        <li class="page-item active" aria-current="page">
-            <span class="page-link">{{ num }}</span>
-        </li>
-        {% else %}
-        <li class="page-item"><a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ num }}">{{ num }}</a></li>
-        {% endif %}
-        {% endfor %}
+            forms.forEach(form => {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
 
-        {% if cpus.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cpus.next_page_number }}" aria-label="Следующая">
-                <span aria-hidden="true">&raquo;</span>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">&raquo;</span>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
-{% endif %}
+                    const cpuId = form.dataset.cpuId;
+                    const messageElem = document.getElementById('added-message-' + cpuId);
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const forms = document.querySelectorAll('.add-to-cart-form');
+                    const formData = new FormData(form);
 
-        forms.forEach(form => {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-
-                const cpuId = form.dataset.cpuId;
-                const messageElem = document.getElementById('added-message-' + cpuId);
-
-                const formData = new FormData(form);
-
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
-                    },
-                    body: formData,
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Ошибка сети');
-                        }
-                        return response.json();
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                        },
+                        body: formData,
                     })
-                    .then(data => {
-                        if (data.success) {
-                            messageElem.style.display = 'block';
-                            setTimeout(() => {
-                                messageElem.style.display = 'none';
-                            }, 3000);
-                        } else {
-                            if (data.error === 'Необходимо войти в систему.') {
-                                alert('Для добавления товара в корзину необходимо войти в систему.');
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Ошибка сети');
                             }
-                            else {
-                                alert(data.error || 'Не удалось добавить товар');
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                messageElem.style.display = 'block';
+                                setTimeout(() => {
+                                    messageElem.style.display = 'none';
+                                }, 3000);
+                            } else {
+                                if (data.error === 'Необходимо войти в систему.') {
+                                    alert('Для добавления товара в корзину необходимо войти в систему.');
+                                }
+                                else {
+                                    alert(data.error || 'Не удалось добавить товар');
+                                }
                             }
-                        }
-                    })
-                    .catch(error => {
-                        alert('Ошибка при добавлении товара в корзину');
-                        console.error(error);
-                    });
+                        })
+                        .catch(error => {
+                            alert('Ошибка при добавлении товара в корзину');
+                            console.error(error);
+                        });
+                });
             });
         });
-    });
-</script>
+    </script>
 
 {% endblock %}
