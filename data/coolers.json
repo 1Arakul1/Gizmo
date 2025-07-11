@@ -1,0 +1,86 @@
+[
+  {
+    "model": "components.cooler",
+    "pk": 1,
+    "fields": {
+      "manufacturer": 5,
+      "model": "MSI MAG Coreliquid C240",
+      "cooler_type": "liquid",
+      "fan_size": null,
+      "radiator_size": "240mm",
+      "price": "85.00",
+      "image": null,
+      "rgb": true
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 2,
+    "fields": {
+      "manufacturer": 5,
+      "model": "MSI MAG Air Cooler",
+      "cooler_type": "air",
+      "fan_size": 120,
+      "radiator_size": null,
+      "price": "40.00",
+      "image": null,
+      "rgb": true
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 3,
+    "fields": {
+      "manufacturer": 5,
+      "model": "MSI MEG Coreliquid S360",
+      "cooler_type": "liquid",
+      "fan_size": null,
+      "radiator_size": "360mm",
+      "price": "280.00",
+      "image": null,
+      "rgb": true
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 4,
+    "fields": {
+      "manufacturer": 37,
+      "model": "DEEPCOOL AK400",
+      "cooler_type": "air",
+      "fan_size": 120,
+      "radiator_size": null,
+      "price": "35.00",
+      "image": null,
+      "rgb": false
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 5,
+    "fields": {
+      "manufacturer": 37,
+      "model": "DEEPCOOL AK620",
+      "cooler_type": "air",
+      "fan_size": 120,
+      "radiator_size": null,
+      "price": "65.00",
+      "image": null,
+      "rgb": false
+    }
+  },
+  {
+    "model": "components.cooler",
+    "pk": 6,
+    "fields": {
+      "manufacturer": 37,
+      "model": "DEEPCOOL LS720",
+      "cooler_type": "liquid",
+      "fan_size": null,
+      "radiator_size": "360mm",
+      "price": "150.00",
+      "image": null,
+      "rgb": true
+    }
+  }
+]

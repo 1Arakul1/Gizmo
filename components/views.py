@@ -374,73 +374,103 @@ def cooler_list(request):
     )
 
 
+def get_stock_status(component_type, component_id):
+    """
+    Получает статус наличия товара на складе.
+    Возвращает True, если товар есть в наличии, False - если нет.
+    """
+    try:
+        stock = Stock.objects.get(component_type=component_type, component_id=component_id)
+        return stock.quantity > 0
+    except Stock.DoesNotExist:
+        return False  # Или True, если отсутствие записи означает наличие на складе
+
+
 def cpu_detail(request, pk):
     cpu = get_object_or_404(CPU, pk=pk)
+    in_stock = get_stock_status('cpu', cpu.id)
     review_form = ReviewForm()
     return render(
-        request, 'components/cpu_detail.html', {'cpu': cpu, 'review_form': review_form}
+        request,
+        'components/cpu_detail.html',
+        {'cpu': cpu, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def gpu_detail(request, pk):
     gpu = get_object_or_404(GPU, pk=pk)
+    in_stock = get_stock_status('gpu', gpu.id)
     review_form = ReviewForm()
     return render(
-        request, 'components/gpu_detail.html', {'gpu': gpu, 'review_form': review_form}
+        request,
+        'components/gpu_detail.html',
+        {'gpu': gpu, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def motherboard_detail(request, pk):
     motherboard = get_object_or_404(Motherboard, pk=pk)
+    in_stock = get_stock_status('motherboard', motherboard.id)
     review_form = ReviewForm()
     return render(
         request,
         'components/motherboard_detail.html',
-        {'motherboard': motherboard, 'review_form': review_form},
+        {'motherboard': motherboard, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def ram_detail(request, pk):
     ram = get_object_or_404(RAM, pk=pk)
+    in_stock = get_stock_status('ram', ram.id)
     review_form = ReviewForm()
     return render(
-        request, 'components/ram_detail.html', {'ram': ram, 'review_form': review_form}
+        request,
+        'components/ram_detail.html',
+        {'ram': ram, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def storage_detail(request, pk):
     storage = get_object_or_404(Storage, pk=pk)
+    in_stock = get_stock_status('storage', storage.id)
     review_form = ReviewForm()
     return render(
         request,
         'components/storage_detail.html',
-        {'storage': storage, 'review_form': review_form},
+        {'storage': storage, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def psu_detail(request, pk):
     psu = get_object_or_404(PSU, pk=pk)
+    in_stock = get_stock_status('psu', psu.id)
     review_form = ReviewForm()
     return render(
-        request, 'components/psu_detail.html', {'psu': psu, 'review_form': review_form}
+        request,
+        'components/psu_detail.html',
+        {'psu': psu, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def case_detail(request, pk):
     case = get_object_or_404(Case, pk=pk)
+    in_stock = get_stock_status('case', case.id)
     review_form = ReviewForm()
     return render(
-        request, 'components/case_detail.html', {'case': case, 'review_form': review_form}
+        request,
+        'components/case_detail.html',
+        {'case': case, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 
 def cooler_detail(request, pk):
     cooler = get_object_or_404(Cooler, pk=pk)
+    in_stock = get_stock_status('cooler', cooler.id)
     review_form = ReviewForm()
     return render(
         request,
         'components/cooler_detail.html',
-        {'cooler': cooler, 'review_form': review_form},
+        {'cooler': cooler, 'review_form': review_form, 'in_stock': in_stock},
     )
 
 

@@ -20,8 +20,7 @@
                     <p><strong>Размер радиатора:</strong> {{ cooler.radiator_size }}</p>
                 {% endif %}
                 <p><strong>Цена:</strong> {{ cooler.price }} руб.</p>
-                <p>component_type: cooler</p>
-                <p>component_id: {{ cooler.pk }}</p>
+
                 <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}"
                       data-url="{% url 'builds:add_to_cart' %}">
                     {% csrf_token %}
@@ -31,7 +30,13 @@
                         <label for="quantity">Количество:</label>
                         <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1">
                     </div>
-                    <button type="submit" class="btn btn-success">Добавить в корзину</button>
+                     <button type="submit" class="btn btn-success" {% if not in_stock %}disabled{% endif %}>
+                        {% if in_stock %}
+                            Добавить в корзину
+                        {% else %}
+                            Нет в наличии
+                        {% endif %}
+                    </button>
                 </form>
                 <div id="add-to-cart-message"></div>
                 <!-- Контейнер для сообщения -->
@@ -106,14 +111,6 @@
                         if (response.status === 'success') {
                             // Перенаправление на страницу корзины
                             window.location.href = "{% url 'builds:cart' %}";
-                            //  <-- Добавлено перенаправление
-                            // $('#add-to-cart-message').html('<div class="alert alert-success">' + response.message + '</div>');
-                            // if ($('#cart-item-count').length) {
-                            //     $('#cart-item-count').text(response.cart_item_count);
-                            // }
-                            // setTimeout(function() {
-                            //     $('#add-to-cart-message').empty();
-                            // }, 3000);
                         } else {
                             $('#add-to-cart-message').html('<div class="alert alert-danger">' + response.message + '</div>');
                             setTimeout(function () {

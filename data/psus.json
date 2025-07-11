@@ -1,62 +1,86 @@
 [
   {
     "model": "components.psu",
-    "pk": 1,
+    "pk": 6,
     "fields": {
-      "manufacturer": 19,
-      "model": "PRIME TX-1000",
-      "power": 1000,
-      "certification": "80+ Titanium",
-      "price": "350.00",
+      "manufacturer": 15,
+      "model": "SuperNOVA 850 GA",
+      "power": 850,
+      "certification": "80+ Gold",
+      "price": "130.00",
       "image": null
     }
   },
   {
     "model": "components.psu",
-    "pk": 2,
+    "pk": 7,
+    "fields": {
+      "manufacturer": 15,
+      "model": "SuperNOVA 1000 G6",
+      "power": 1000,
+      "certification": "80+ Gold",
+      "price": "180.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.psu",
+    "pk": 8,
     "fields": {
       "manufacturer": 16,
-      "model": "HX1000 Platinum",
-      "power": 1000,
-      "certification": "80+ Platinum",
-      "price": "300.00",
-       "image": null
+      "model": "V850 SFX Gold",
+      "power": 850,
+      "certification": "80+ Gold",
+      "price": "140.00",
+      "image": null
     }
   },
   {
     "model": "components.psu",
-    "pk": 22,
+    "pk": 9,
     "fields": {
-      "manufacturer": 22,
-      "model": "Focus GX-750",
+      "manufacturer": 16,
+      "model": "XG750 Plus Gold",
       "power": 750,
       "certification": "80+ Gold",
-      "price": "100.00",
+      "price": "120.00",
       "image": null
     }
   },
-    {
+  {
     "model": "components.psu",
-    "pk": 25,
+    "pk": 10,
     "fields": {
-      "manufacturer": 25,
-      "model": "SuperNOVA 750 G5",
-      "power": 750,
-      "certification": "80+ Gold",
-      "price": "90.00",
+      "manufacturer": 19,
+      "model": "PRIME TX-850",
+      "power": 850,
+      "certification": "80+ Titanium",
+      "price": "300.00",
       "image": null
     }
   },
-   {
+  {
     "model": "components.psu",
-    "pk": 26,
+    "pk": 11,
     "fields": {
-      "manufacturer": 26,
-      "model": "MWE Gold 650 - V2",
+      "manufacturer": 19,
+      "model": "FOCUS GX-850",
+      "power": 850,
+      "certification": "80+ Gold",
+      "price": "140.00",
+      "image": null
+    }
+  },
+  {
+    "model": "components.psu",
+    "pk": 12,
+    "fields": {
+      "manufacturer": 15,
+      "model": "SuperNOVA 650 GM",
       "power": 650,
       "certification": "80+ Gold",
-      "price": "80.00",
-       "image": null
+      "price": "110.00",
+      "image": null
     }
   }
 ]

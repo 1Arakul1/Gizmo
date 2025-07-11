@@ -19,8 +19,7 @@
                 <p><strong>Тип:</strong> {{ storage.get_type_display }}</p>
                 <p><strong>Цена:</strong> {{ storage.price }} руб.</p>
                 <!-- Добавьте другие характеристики накопителя, если они есть в вашей модели -->
-                <p>component_type: storage</p>
-                <p>component_id: {{ storage.pk }}</p>
+
                 <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}"
                       data-url="{% url 'builds:add_to_cart' %}">
                     {% csrf_token %}
@@ -30,7 +29,13 @@
                         <label for="quantity">Количество:</label>
                         <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1">
                     </div>
-                    <button type="submit" class="btn btn-success">Добавить в корзину</button>
+                    <button type="submit" class="btn btn-success" {% if not in_stock %}disabled{% endif %}>
+                        {% if in_stock %}
+                            Добавить в корзину
+                        {% else %}
+                            Нет в наличии
+                        {% endif %}
+                    </button>
                 </form>
                 <div id="add-to-cart-message"></div>
                 <!-- Контейнер для сообщения -->
@@ -105,14 +110,6 @@
                         if (response.status === 'success') {
                             // Перенаправление на страницу корзины
                             window.location.href = "{% url 'builds:cart' %}";
-                            //  <-- Добавлено перенаправление
-                            // $('#add-to-cart-message').html('<div class="alert alert-success">' + response.message + '</div>');
-                            // if ($('#cart-item-count').length) {
-                            //     $('#cart-item-count').text(response.cart_item_count);
-                            // }
-                            // setTimeout(function() {
-                            //     $('#add-to-cart-message').empty();
-                            // }, 3000);
                         } else {
                             $('#add-to-cart-message').html('<div class="alert alert-danger">' + response.message + '</div>');
                             setTimeout(function () {

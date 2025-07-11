@@ -52,13 +52,8 @@
                                value="{{ form.capacity.value|default_if_none:'' }}" placeholder="Например, 16">
                     </div>
 
-                    <!-- RGB подсветка -->
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="rgb"
-                               name="{{ form.rgb.name }}" value="true"
-                                {% if form.rgb.value %}checked{% endif %}>
-                        <label class="form-check-label" for="rgb">RGB подсветка</label>
-                    </div>
+                
+                    
 
                     <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
                 </form>
