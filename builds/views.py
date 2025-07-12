@@ -30,7 +30,7 @@ from django.shortcuts import (
     redirect,
     render,
 )
-
+from django.views.decorators.cache import cache_page
 from django.urls import reverse
 from django.utils import timezone
 
@@ -199,11 +199,11 @@ def add_to_cart(request):
         """Добавляет товар в корзину пользователя."""
         component_type = request.POST.get('component_type')
         component_id = request.POST.get('component_id')
-        quantity = request.POST.get('quantity', '1')
+        quantity_requested = request.POST.get('quantity', '1')  # Changed variable name
 
         logger.debug(
             f"Received data: component_type={component_type}, "
-            f"component_id={component_id}, quantity={quantity}"
+            f"component_id={component_id}, quantity={quantity_requested}"  # Changed variable name
         )
 
         if not component_type or not component_id:
@@ -217,9 +217,9 @@ def add_to_cart(request):
                 return redirect('builds:cart')
 
         try:
-            quantity = int(quantity)
-            if quantity < 1:
-                quantity = 1
+            quantity_requested = int(quantity_requested)  # Changed variable name
+            if quantity_requested < 1: # Changed variable name
+                quantity_requested = 1  # Changed variable name
             component_id = int(component_id)
         except ValueError:
             error_response = {
@@ -294,6 +294,29 @@ def add_to_cart(request):
                 else:
                     return redirect('builds:cart')
 
+            # Get stock information
+            try:
+                stock_item = Stock.objects.get(component_type=component_type, component_id=component_id)
+                available_quantity = stock_item.quantity
+            except Stock.DoesNotExist:
+                available_quantity = 0  # Consider it out of stock if no stock entry exists.
+
+            # Check if enough stock is available
+            if quantity_requested > available_quantity:
+                error_message = f'На складе всего {available_quantity} единиц товара.'
+
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    error_response = {
+                        'success': False,
+                        'error': error_message,
+                    }
+                    return JsonResponse(error_response, status=400)
+                else:
+                    # Redirect back to the detail page of the component with the error message
+                    # Construct the URL name dynamically
+                    url_name = f'components:{component_type}_detail'
+                    url = reverse(url_name, kwargs={'pk': component_id})
+                    return redirect(f"{url}?error={error_message}")
             cart_item, created = CartItem.objects.get_or_create(
                 user=request.user,
                 build=None,
@@ -312,9 +335,9 @@ def add_to_cart(request):
 
         # Обновляем количество
         if not created:
-            cart_item.quantity += quantity
+            cart_item.quantity += quantity_requested
         else:
-            cart_item.quantity = quantity
+            cart_item.quantity = quantity_requested
 
         cart_item.save()
 
@@ -332,7 +355,8 @@ def add_to_cart(request):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
         else:
-            return redirect('builds:cart')
+            return redirect('builds:cart') # Redirect to cart on success
+
 
 
 
@@ -817,8 +841,11 @@ class CustomOrderUpdateForm(OrderUpdateForm):
 
 @login_required
 @user_passes_test(is_employee)
+
 def employee_order_list(request):
-    logger.info(f"Request GET parameters: {request.GET}")
+    logger.info(f"employee_order_list GET parameters: {request.GET}")  # Log GET parameters
+    logger.info(f"User is authenticated: {request.user.is_authenticated}")
+    logger.info(f"User is employee: {is_employee(request.user)}")
 
     query = request.GET.get('q')
     # refresh = request.GET.get('refresh')  # Больше не нужен
@@ -1158,6 +1185,7 @@ def my_orders(request):
     return render(request, 'builds/my_orders.html', {'orders': orders})
 
 
+@cache_page(60 * 15)  # Cache for 15 minutes
 def index(request):
     cpu_list = CPU.objects.all().select_related()
     paginator = Paginator(cpu_list, 6)
@@ -1179,6 +1207,7 @@ def index(request):
             return render(request, 'pc_builder/index.html', context)
     else:
         return render(request, 'pc_builder/index.html', context)
+
 
 
 def get_compatible_motherboards(request):

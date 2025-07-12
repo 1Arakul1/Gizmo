@@ -61,7 +61,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # **Убедитесь, что он здесь**
+    
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -180,12 +180,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Пример
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # Или 'redis://:your_password@127.0.0.1:6379/1' если есть пароль
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     }
 }
+
 try:
     from django.core.cache import cache
 
@@ -219,7 +223,7 @@ LOGGING = {
 # Настройки кэширования (дополнительно)
 CACHE_ENABLED = True  # Читаем из .env
 CACHE_MIDDLEWARE_ALIAS = "default"  # Используем кэш по умолчанию
-CACHE_MIDDLEWARE_SECONDS = 10  # Кэшировать на 15 минут (в секундах)
+CACHE_MIDDLEWARE_SECONDS =0 # Кэшировать на 15 минут (в секундах)
 CACHE_MIDDLEWARE_KEY_PREFIX = ""  # Префикс для ключей кэша # Префикс для ключей кэшаючей кэша
 
 #!/usr/bin/env python

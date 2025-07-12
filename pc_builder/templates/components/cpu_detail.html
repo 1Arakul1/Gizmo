@@ -1,5 +1,6 @@
 <!-- templates/components/cpu_detail.html -->
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container my-4">
@@ -9,7 +10,7 @@
             {% if cpu.image %}
                 <img src="{{ cpu.image.url }}" alt="{{ cpu.model }}" class="img-fluid rounded shadow-sm">
             {% else %}
-                <p>Изображение отсутствует</p>
+                img src="{{ cpu.image.url }}" alt="No Image" class="img-fluid rounded shadow-sm">
             {% endif %}
         </div>
         <div class="col-md-8">
@@ -69,16 +70,38 @@
                         <div>{{ cpu.price }} руб.</div>
                     </div>
                 </div>
+
+                {% if in_stock %}
+                    <div class="alert alert-success" role="alert">
+                        Товар в наличии
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        Товара нет в наличии
+                    </div>
+                {% endif %}
+
+                {% if stock_quantity %}
+                    <p>На складе: {{ stock_quantity }} шт.</p>
+                {% else %}
+                    <p>Информация о наличии отсутствует</p>
+                {% endif %}
+
+                {% if request.GET.error %}
+                    <div class="alert alert-danger">
+                        {{ request.GET.error }}
+                    </div>
+                {% endif %}
             </div>
 
-            <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}"
-                  data-url="{% url 'builds:add_to_cart' %}" class="mt-4">
+            <form id="add-to-cart-form" method="post" action="{% url 'builds:add_to_cart' %}" class="mt-4">
                 {% csrf_token %}
                 <input type="hidden" name="component_type" value="cpu">
                 <input type="hidden" name="component_id" value="{{ cpu.pk }}">
                 <div class="form-group mb-3" style="max-width: 150px;">
                     <label for="quantity">Количество:</label>
-                    <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1">
+                    <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1"
+                           {% if not in_stock %} disabled {% endif %}>
                 </div>
 
                 <button type="submit" class="btn btn-success" {% if not in_stock %}disabled{% endif %}>

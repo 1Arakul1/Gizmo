@@ -1,5 +1,4 @@
 # components/views.py
-# components/views.py
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
@@ -388,89 +387,137 @@ def get_stock_status(component_type, component_id):
 
 def cpu_detail(request, pk):
     cpu = get_object_or_404(CPU, pk=pk)
-    in_stock = get_stock_status('cpu', cpu.id)
+    try:
+        stock = Stock.objects.get(component_type='cpu', component_id=cpu.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/cpu_detail.html',
-        {'cpu': cpu, 'review_form': review_form, 'in_stock': in_stock},
+        {'cpu': cpu, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def gpu_detail(request, pk):
     gpu = get_object_or_404(GPU, pk=pk)
-    in_stock = get_stock_status('gpu', gpu.id)
+    try:
+        stock = Stock.objects.get(component_type='gpu', component_id=gpu.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/gpu_detail.html',
-        {'gpu': gpu, 'review_form': review_form, 'in_stock': in_stock},
+        {'gpu': gpu, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def motherboard_detail(request, pk):
     motherboard = get_object_or_404(Motherboard, pk=pk)
-    in_stock = get_stock_status('motherboard', motherboard.id)
+    try:
+        stock = Stock.objects.get(component_type='motherboard', component_id=motherboard.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/motherboard_detail.html',
-        {'motherboard': motherboard, 'review_form': review_form, 'in_stock': in_stock},
+        {'motherboard': motherboard, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def ram_detail(request, pk):
     ram = get_object_or_404(RAM, pk=pk)
-    in_stock = get_stock_status('ram', ram.id)
+    try:
+        stock = Stock.objects.get(component_type='ram', component_id=ram.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/ram_detail.html',
-        {'ram': ram, 'review_form': review_form, 'in_stock': in_stock},
+        {'ram': ram, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def storage_detail(request, pk):
     storage = get_object_or_404(Storage, pk=pk)
-    in_stock = get_stock_status('storage', storage.id)
+    try:
+        stock = Stock.objects.get(component_type='storage', component_id=storage.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/storage_detail.html',
-        {'storage': storage, 'review_form': review_form, 'in_stock': in_stock},
+        {'storage': storage, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def psu_detail(request, pk):
     psu = get_object_or_404(PSU, pk=pk)
-    in_stock = get_stock_status('psu', psu.id)
+    try:
+        stock = Stock.objects.get(component_type='psu', component_id=psu.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/psu_detail.html',
-        {'psu': psu, 'review_form': review_form, 'in_stock': in_stock},
+        {'psu': psu, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def case_detail(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    in_stock = get_stock_status('case', case.id)
+    try:
+        stock = Stock.objects.get(component_type='case', component_id=case.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/case_detail.html',
-        {'case': case, 'review_form': review_form, 'in_stock': in_stock},
+        {'case': case, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 
 def cooler_detail(request, pk):
     cooler = get_object_or_404(Cooler, pk=pk)
-    in_stock = get_stock_status('cooler', cooler.id)
+    try:
+        stock = Stock.objects.get(component_type='cooler', component_id=cooler.id)
+        stock_quantity = stock.quantity
+        in_stock = stock_quantity > 0
+    except Stock.DoesNotExist:
+        in_stock = False
+        stock_quantity = 0
     review_form = ReviewForm()
     return render(
         request,
         'components/cooler_detail.html',
-        {'cooler': cooler, 'review_form': review_form, 'in_stock': in_stock},
+        {'cooler': cooler, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
     )
 
 

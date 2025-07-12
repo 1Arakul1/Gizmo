@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static cache %}  {# Добавляем тег load для cache #}
 
 {% block content %}
     <div class="container mt-5">
@@ -67,5 +67,3 @@
         </div>
     </div>
 {% endblock %}
-
-

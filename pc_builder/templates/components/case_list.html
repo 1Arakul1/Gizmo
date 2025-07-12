@@ -1,5 +1,4 @@
 <!-- templates/components/case_list.html -->
-<!-- templates/components/case_list.html -->
 {% extends "base.html" %}
 {% load static %}
 {% load component_tags %}
@@ -86,15 +85,14 @@
                                     </p>
 
                                     {% with stock_item=stock_dict|get_item:case.id %}
-                                        {% if stock_item %}
-                                            {% if stock_item.quantity > 0 %}
-                                                <p class="text-success">В наличии</p>
+                                        <p>
+                                            На складе:
+                                            {% if stock_item %}
+                                                {{ stock_item.quantity }} шт.
                                             {% else %}
-                                                <p class="text-danger fw-bold">Товара временно нет в наличии</p>
+                                                Нет в наличии
                                             {% endif %}
-                                        {% else %}
-                                            <p class="text-muted">Информация о наличии отсутствует</p>
-                                        {% endif %}
+                                        </p>
 
                                         <a href="{% url 'components:case_detail' case.pk %}" class="btn btn-primary mt-auto mb-3 animate__animated animate__slideInRight animate-delay-09">Подробнее</a>
 
@@ -105,15 +103,18 @@
                                                 <input type="hidden" name="component_id" value="{{ case.pk }}">
                                                 <div class="form-group mb-2">
                                                     <label for="quantity-{{ case.pk }}">Количество:</label>
-                                                    <input type="number" class="form-control" id="quantity-{{ case.pk }}" name="quantity" value="1" min="1">
+                                                    <input type="number" class="form-control" id="quantity-{{ case.pk }}" name="quantity" value="1" min="1"
+                                                        {% if stock_item and stock_item.quantity == 0 %} disabled {% endif %}  >
+                                                    {% if stock_item and stock_item.quantity == 0 %}
+                                                        <div class="text-danger">Товар отсутствует на складе</div>
+                                                    {% endif %}
                                                 </div>
-                                                {% if stock_item %}
-                                                    <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" {% if stock_item.quantity == 0 %}disabled{% endif %}>Добавить в корзину</button>
-                                                {% else %}
-                                                    <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11" disabled>Добавить в корзину</button>
-                                                {% endif %}
+                                                <button type="submit" class="btn btn-success animate__animated animate__fadeIn animate-delay-11"
+                                                        {% if not stock_item or stock_item.quantity == 0 %}disabled{% endif %}>
+                                                    Добавить в корзину
+                                                </button>
                                             </form>
-
+                                            <div class="text-danger mt-2 add-to-cart-error" id="add-to-cart-error-{{ case.pk }}" style="display: none;"></div>
                                             <div class="added-message text-success mt-2 animate__animated animate__fadeIn animate-delay-13" id="added-message-{{ case.pk }}"
                                                  style="display: none; font-weight: 600;">
                                                 Товар в корзине
@@ -124,7 +125,6 @@
                                                 <a href="{% url 'users:login' %}">войдите</a>, чтобы добавить товар в корзину.
                                             </p>
                                         {% endif %}
-
                                     {% endwith %}
                                 </div>
                             </div>
@@ -141,9 +141,7 @@
                         <ul class="pagination justify-content-center">
                             {% if cases.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link"
-                                       href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}{% if form.manufacturer.value %}manufacturer={{ form.manufacturer.value }}&{% endif %}{% if form.form_factor.value %}form_factor={{ form.form_factor.value }}&{% endif %}{% if form.dimensions.value %}dimensions={{ form.dimensions.value }}&{% endif %}{% if form.side_panel_window.value %}side_panel_window=on&{% endif %}page={{ cases.previous_page_number }}"
-                                       aria-label="Предыдущая">
+                                    <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cases.previous_page_number }}" aria-label="Предыдущая">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
@@ -159,17 +157,13 @@
                                         <span class="page-link">{{ num }}</span>
                                     </li>
                                 {% else %}
-                                    <li class="page-item"><a class="page-link"
-                                                              href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}{% if form.manufacturer.value %}manufacturer={{ form.manufacturer.value }}&{% endif %}{% if form.form_factor.value %}form_factor={{ form.form_factor.value }}&{% endif %}{% if form.dimensions.value %}dimensions={{ form.dimensions.value }}&{% endif %}{% if form.side_panel_window.value %}side_panel_window=on&{% endif %}page={{ num }}">{{ num }}</a>
-                                    </li>
+                                    <li class="page-item"><a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ num }}">{{ num }}</a></li>
                                 {% endif %}
                             {% endfor %}
 
                             {% if cases.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link"
-                                       href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}{% if form.manufacturer.value %}manufacturer={{ form.manufacturer.value }}&{% endif %}{% if form.form_factor.value %}form_factor={{ form.form_factor.value }}&{% endif %}{% if form.dimensions.value %}dimensions={{ form.dimensions.value }}&{% endif %}{% if form.side_panel_window.value %}side_panel_window=on&{% endif %}page={{ cases.next_page_number }}"
-                                       aria-label="Следующая">
+                                    <a class="page-link" href="?{% if form.q.value %}q={{ form.q.value }}&{% endif %}page={{ cases.next_page_number }}" aria-label="Следующая">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>
@@ -195,6 +189,7 @@
 
                     const caseId = form.dataset.caseId;
                     const messageElem = document.getElementById('added-message-' + caseId);
+                    const errorElem = document.getElementById('add-to-cart-error-' + caseId);
 
                     const formData = new FormData(form);
 
@@ -208,32 +203,40 @@
                     })
                         .then(response => {
                             if (!response.ok) {
-                                throw new Error('Ошибка сети');
+                                if (response.headers.get('content-type')?.includes('application/json')) {
+                                    return response.json().then(err => {
+                                        throw err;
+                                    });
+                                }
+                                throw new Error('Ошибка сети или другая ошибка');
                             }
                             return response.json();
                         })
                         .then(data => {
                             if (data.success) {
+                                // Clear previous error messages
+                                errorElem.style.display = 'none';
+                                errorElem.textContent = '';
+
                                 messageElem.style.display = 'block';
                                 setTimeout(() => {
                                     messageElem.style.display = 'none';
                                 }, 3000);
                             } else {
-                                if (data.error === 'Необходимо войти в систему.') {
-                                    alert('Для добавления товара в корзину необходимо войти в систему.');
-                                }
-                                else {
-                                    alert(data.error || 'Не удалось добавить товар');
-                                }
+                                messageElem.style.display = 'none';
+                                messageElem.textContent = '';
+
+                                errorElem.textContent = data.error || 'Не удалось добавить товар';
+                                errorElem.style.display = 'block';
                             }
                         })
                         .catch(error => {
-                            alert('Ошибка при добавлении товара в корзину');
-                            console.error(error);
+                            console.error('Error:', error);
+                            errorElem.textContent = 'Произошла ошибка при добавлении товара в корзину.';
+                            errorElem.style.display = 'block';
                         });
                 });
             });
         });
     </script>
-
 {% endblock %}
