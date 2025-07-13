@@ -1,10 +1,19 @@
 # components/views.py
 from django.shortcuts import render, get_object_or_404
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.core.paginator import (
+    Paginator,
+    EmptyPage,
+    PageNotAnInteger,
+)  # Импортируем классы для пагинации
+from django.db.models import Q  # Импортируем Q для сложных запросов
+from django.contrib.auth.decorators import (
+    login_required,
+    user_passes_test,
+)  # Импортируем декораторы для проверки авторизации и прав пользователя
+from django.http import (
+    HttpResponseRedirect,
+)  # Импортируем класс для перенаправления
+from django.urls import reverse  # Импортируем reverse для получения URL по имени
 from .models import (
     CPU,
     GPU,
@@ -16,7 +25,7 @@ from .models import (
     Cooler,
     Stock,
     Manufacturer,
-)
+)  # Импортируем модели компонентов и производителя
 from .forms import (
     CPUSearchForm,
     GPUSearchForm,
@@ -27,350 +36,630 @@ from .forms import (
     CaseSearchForm,
     CoolerSearchForm,
     ReviewForm,
-)
+)  # Импортируем формы поиска компонентов и форму отзыва
 from django.shortcuts import render, get_object_or_404
-from django.shortcuts import redirect  # Import all search forms
-
+from django.shortcuts import (
+    redirect,
+)  # Import all search forms # Импортируем функцию redirect
 
 def cpu_list(request):
-    form = CPUSearchForm(request.GET)
-    cpus_list = CPU.objects.all()
+    """Отображает список процессоров с возможностью фильтрации и поиска."""
+    form = CPUSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска CPU, передавая параметры из GET запроса
+    cpus_list = CPU.objects.all()  # Получаем все процессоры из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        socket = form.cleaned_data.get('socket')
-        integrated_graphics = form.cleaned_data.get('integrated_graphics')
-        sort = form.cleaned_data.get('sort')  # Получаем значение сортировки
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        socket = form.cleaned_data.get(
+            'socket'
+        )  # Получаем выбранный сокет из очищенных данных формы
+        integrated_graphics = form.cleaned_data.get(
+            'integrated_graphics'
+        )  # Получаем значение флага "интегрированная графика" из очищенных данных формы
+        sort = form.cleaned_data.get(
+            'sort'
+        )  # Получаем значение сортировки
 
-        if q:
+        if q:  # Если есть поисковой запрос
             cpus_list = cpus_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
+            ).distinct()  # Фильтруем процессоры по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
 
-        if manufacturers:
-            cpus_list = cpus_list.filter(manufacturer__id__in=manufacturers)
+        if manufacturers:  # Если выбраны производители
+            cpus_list = cpus_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем процессоры по выбранным производителям
 
-        if socket:
-            cpus_list = cpus_list.filter(socket__icontains=socket)
+        if socket:  # Если выбран сокет
+            cpus_list = cpus_list.filter(
+                socket__icontains=socket
+            )  # Фильтруем процессоры по выбранному сокету
 
-        if integrated_graphics:
-            cpus_list = cpus_list.filter(integrated_graphics=True)
+        if integrated_graphics:  # Если установлен флаг "интегрированная графика"
+            cpus_list = cpus_list.filter(
+                integrated_graphics=True
+            )  # Фильтруем процессоры, у которых есть интегрированная графика
 
-    # Сортировка по параметру sort
-    if sort == 'price_asc':
-        cpus_list = cpus_list.order_by('price')
-    elif sort == 'price_desc':
-        cpus_list = cpus_list.order_by('-price')
-    elif sort == 'frequency_desc':
-        cpus_list = cpus_list.order_by('-frequency')
-    else:
-        # По умолчанию — популярность (например, по количеству заказов или рейтингу)
-        # Если у вас нет поля популярности, можно убрать или заменить на id
-        cpus_list = cpus_list.order_by('-id')
+        # Сортировка по параметру sort
+        if sort == 'price_asc':
+            cpus_list = cpus_list.order_by(
+                'price'
+            )  # Сортируем процессоры по возрастанию цены
+        elif sort == 'price_desc':
+            cpus_list = cpus_list.order_by(
+                '-price'
+            )  # Сортируем процессоры по убыванию цены
+        elif sort == 'frequency_desc':
+            cpus_list = cpus_list.order_by(
+                '-frequency'
+            )  # Сортируем процессоры по убыванию частоты
+        else:
+            # По умолчанию — популярность (например, по количеству заказов или рейтингу)
+            # Если у вас нет поля популярности, можно убрать или заменить на id
+            cpus_list = cpus_list.order_by(
+                '-id'
+            )  # Сортируем процессоры по id в обратном порядке (новые в начале)
 
     # Получаем наличие из Stock
-    stock_items = Stock.objects.filter(component_type='cpu')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='cpu'
+    )  # Получаем все записи о наличии для процессоров
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(cpus_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        cpus_list, 6
+    )  # Создаем объект Paginator, разбивающий список процессоров на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        cpus = paginator.page(page)
-    except PageNotAnInteger:
-        cpus = paginator.page(1)
-    except EmptyPage:
-        cpus = paginator.page(paginator.num_pages)
+        cpus = paginator.page(page)  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        cpus = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        cpus = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
     context = {
         'cpus': cpus,
         'form': form,
         'stock_dict': stock_dict,
-    }
-    return render(request, 'components/cpu_list.html', context)
-
+    }  # Создаем контекст для шаблона, передавая список процессоров, форму поиска и словарь наличия
+    return render(
+        request, 'components/cpu_list.html', context
+    )  # Отображаем шаблон списка процессоров, передавая контекст
 
 def gpu_list(request):
-    form = GPUSearchForm(request.GET)
-    gpus_list = GPU.objects.all()
+    """Отображает список видеокарт с возможностью фильтрации и поиска."""
+    form = GPUSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска GPU, передавая параметры из GET запроса
+    gpus_list = GPU.objects.all()  # Получаем все видеокарты из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        memory = form.cleaned_data.get('memory')
-        interface = form.cleaned_data.get('interface')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        memory = form.cleaned_data.get(
+            'memory'
+        )  # Получаем выбранный объем памяти из очищенных данных формы
+        interface = form.cleaned_data.get(
+            'interface'
+        )  # Получаем выбранный интерфейс из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             gpus_list = gpus_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
-        if manufacturers:
-            gpus_list = gpus_list.filter(manufacturer__id__in=manufacturers)
-        if memory:
-            gpus_list = gpus_list.filter(memory=memory)
-        if interface:
-            gpus_list = gpus_list.filter(interface__icontains=interface)
+            ).distinct()  # Фильтруем видеокарты по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
+        if manufacturers:  # Если выбраны производители
+            gpus_list = gpus_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем видеокарты по выбранным производителям
+        if memory:  # Если выбран объем памяти
+            gpus_list = gpus_list.filter(
+                memory=memory
+            )  # Фильтруем видеокарты по выбранному объему памяти
+        if interface:  # Если выбран интерфейс
+            gpus_list = gpus_list.filter(
+                interface__icontains=interface
+            )  # Фильтруем видеокарты по выбранному интерфейсу
 
     # Get all Stock objects for GPUs
-    stock_items = Stock.objects.filter(component_type='gpu')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='gpu'
+    )  # Получаем все записи о наличии для видеокарт
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(gpus_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        gpus_list, 6
+    )  # Создаем объект Paginator, разбивающий список видеокарт на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        gpus = paginator.page(page)
-    except PageNotAnInteger:
-        gpus = paginator.page(1)
-    except EmptyPage:
-        gpus = paginator.page(paginator.num_pages)
+        gpus = paginator.page(page)  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        gpus = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        gpus = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
     return render(
-        request, 'components/gpu_list.html', {'gpus': gpus, 'form': form, 'stock_dict': stock_dict}
-    )
+        request,
+        'components/gpu_list.html',
+        {'gpus': gpus, 'form': form, 'stock_dict': stock_dict},
+    )  # Отображаем шаблон списка видеокарт, передавая контекст
 
 
 def motherboard_list(request):
-    form = MotherboardSearchForm(request.GET)
-    motherboards_list = Motherboard.objects.all()
+    """Отображает список материнских плат с возможностью фильтрации и поиска."""
+    form = MotherboardSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска материнских плат, передавая параметры из GET запроса
+    motherboards_list = Motherboard.objects.all()  # Получаем все материнские платы из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        socket = form.cleaned_data.get('socket')
-        form_factor = form.cleaned_data.get('form_factor')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        socket = form.cleaned_data.get(
+            'socket'
+        )  # Получаем выбранный сокет из очищенных данных формы
+        form_factor = form.cleaned_data.get(
+            'form_factor'
+        )  # Получаем выбранный форм-фактор из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             motherboards_list = motherboards_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
-        if manufacturers:
-            motherboards_list = motherboards_list.filter(manufacturer__id__in=manufacturers)
-        if socket:
-            motherboards_list = motherboards_list.filter(socket__icontains=socket)
-        if form_factor:
+            ).distinct()  # Фильтруем материнские платы по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
+        if manufacturers:  # Если выбраны производители
+            motherboards_list = motherboards_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем материнские платы по выбранным производителям
+        if socket:  # Если выбран сокет
+            motherboards_list = motherboards_list.filter(
+                socket__icontains=socket
+            )  # Фильтруем материнские платы по выбранному сокету
+        if form_factor:  # Если выбран форм-фактор
             motherboards_list = motherboards_list.filter(
                 form_factor__icontains=form_factor
-            )
+            )  # Фильтруем материнские платы по выбранному форм-фактору
 
     # Get all Stock objects for Motherboards
-    stock_items = Stock.objects.filter(component_type='motherboard')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='motherboard'
+    )  # Получаем все записи о наличии для материнских плат
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(motherboards_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        motherboards_list, 6
+    )  # Создаем объект Paginator, разбивающий список материнских плат на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        motherboards = paginator.page(page)
-    except PageNotAnInteger:
-        motherboards = paginator.page(1)
-    except EmptyPage:
-        motherboards = paginator.page(paginator.num_pages)
+        motherboards = paginator.page(
+            page
+        )  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        motherboards = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        motherboards = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
     return render(
         request,
         'components/motherboard_list.html',
-        {'motherboards': motherboards, 'form': form, 'stock_dict': stock_dict},
-    )
+        {
+            'motherboards': motherboards,
+            'form': form,
+            'stock_dict': stock_dict,
+        },
+    )  # Отображаем шаблон списка материнских плат, передавая контекст
 
 
 def ram_list(request):
-    form = RAMSearchForm(request.GET)
-    rams_list = RAM.objects.all()
+    """Отображает список оперативной памяти с возможностью фильтрации и поиска."""
+    form = RAMSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска RAM, передавая параметры из GET запроса
+    rams_list = RAM.objects.all()  # Получаем все модули оперативной памяти из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        type = form.cleaned_data.get('type')
-        capacity = form.cleaned_data.get('capacity')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        type = form.cleaned_data.get(
+            'type'
+        )  # Получаем выбранный тип памяти из очищенных данных формы
+        capacity = form.cleaned_data.get(
+            'capacity'
+        )  # Получаем выбранную емкость памяти из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             rams_list = rams_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
-        if manufacturers:
-            rams_list = rams_list.filter(manufacturer__id__in=manufacturers)
-        if type:
-            rams_list = rams_list.filter(type__icontains=type)
-        if capacity:
-            rams_list = rams_list.filter(capacity=capacity)
+            ).distinct()  # Фильтруем модули памяти по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
+        if manufacturers:  # Если выбраны производители
+            rams_list = rams_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем модули памяти по выбранным производителям
+        if type:  # Если выбран тип памяти
+            rams_list = rams_list.filter(
+                type__icontains=type
+            )  # Фильтруем модули памяти по выбранному типу
+        if capacity:  # Если выбрана емкость
+            rams_list = rams_list.filter(
+                capacity=capacity
+            )  # Фильтруем модули памяти по выбранной емкости
 
     # Get all Stock objects for RAM
-    stock_items = Stock.objects.filter(component_type='ram')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='ram'
+    )  # Получаем все записи о наличии для модулей памяти
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(rams_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        rams_list, 6
+    )  # Создаем объект Paginator, разбивающий список модулей памяти на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        rams = paginator.page(page)
-    except PageNotAnInteger:
-        rams = paginator.page(1)
-    except EmptyPage:
-        rams = paginator.page(paginator.num_pages)
+        rams = paginator.page(page)  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        rams = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        rams = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
     return render(
-        request, 'components/ram_list.html', {'rams': rams, 'form': form, 'stock_dict': stock_dict}
-    )
+        request,
+        'components/ram_list.html',
+        {'rams': rams, 'form': form, 'stock_dict': stock_dict},
+    )  # Отображаем шаблон списка модулей памяти, передавая контекст
 
 
 def storage_list(request):
-    form = StorageSearchForm(request.GET)
-    storages_list = Storage.objects.all()
+    """Отображает список накопителей с возможностью фильтрации и поиска."""
+    form = StorageSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска накопителей, передавая параметры из GET запроса
+    storages_list = Storage.objects.all()  # Получаем все накопители из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        type = form.cleaned_data.get('type')
-        capacity = form.cleaned_data.get('capacity')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        type = form.cleaned_data.get(
+            'type'
+        )  # Получаем выбранный тип накопителя из очищенных данных формы
+        capacity = form.cleaned_data.get(
+            'capacity'
+        )  # Получаем выбранную емкость накопителя из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             storages_list = storages_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
-        if manufacturers:
-            storages_list = storages_list.filter(manufacturer__id__in=manufacturers)
-        if type:
-            storages_list = storages_list.filter(type__icontains=type)
-        if capacity:
-            storages_list = storages_list.filter(capacity=capacity)
+            ).distinct()  # Фильтруем накопители по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
+        if manufacturers:  # Если выбраны производители
+            storages_list = storages_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем накопители по выбранным производителям
+        if type:  # Если выбран тип накопителя
+            storages_list = storages_list.filter(
+                type__icontains=type
+            )  # Фильтруем накопители по выбранному типу
+        if capacity:  # Если выбрана емкость
+            storages_list = storages_list.filter(
+                capacity=capacity
+            )  # Фильтруем накопители по выбранной емкости
 
     # Get all Stock objects for Storages
-    stock_items = Stock.objects.filter(component_type='storage')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='storage'
+    )  # Получаем все записи о наличии для накопителей
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(storages_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        storages_list, 6
+    )  # Создаем объект Paginator, разбивающий список накопителей на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        storages = paginator.page(page)
-    except PageNotAnInteger:
-        storages = paginator.page(1)
-    except EmptyPage:
-        storages = paginator.page(paginator.num_pages)
+        storages = paginator.page(
+            page
+        )  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        storages = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        storages = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
     return render(
         request,
         'components/storage_list.html',
-        {'storages': storages, 'form': form, 'stock_dict': stock_dict},
-    )
+        {
+            'storages': storages,
+            'form': form,
+            'stock_dict': stock_dict,
+        },
+    )  # Отображаем шаблон списка накопителей, передавая контекст
 
 
 def psu_list(request):
-    form = PSUSearchForm(request.GET)
-    psus_list = PSU.objects.all()
+    """Отображает список блоков питания с возможностью фильтрации и поиска."""
+    form = PSUSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска блоков питания, передавая параметры из GET запроса
+    psus_list = PSU.objects.all()  # Получаем все блоки питания из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        power = form.cleaned_data.get('power')
-        certification = form.cleaned_data.get('certification')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        power = form.cleaned_data.get(
+            'power'
+        )  # Получаем выбранную мощность из очищенных данных формы
+        certification = form.cleaned_data.get(
+            'certification'
+        )  # Получаем выбранный сертификат из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             psus_list = psus_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
-        if manufacturers:
-            psus_list = psus_list.filter(manufacturer__id__in=manufacturers)
-        if power:
-            psus_list = psus_list.filter(power=power)
-        if certification:
-            psus_list = psus_list.filter(certification__icontains=certification)
+            ).distinct()  # Фильтруем блоки питания по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
+        if manufacturers:  # Если выбраны производители
+            psus_list = psus_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем блоки питания по выбранным производителям
+        if power:  # Если выбрана мощность
+            psus_list = psus_list.filter(
+                power=power
+            )  # Фильтруем блоки питания по выбранной мощности
+        if certification:  # Если выбран сертификат
+            psus_list = psus_list.filter(
+                certification__icontains=certification
+            )  # Фильтруем блоки питания по выбранному сертификату
 
     # Get all Stock objects for PSUs
-    stock_items = Stock.objects.filter(component_type='psu')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='psu'
+    )  # Получаем все записи о наличии для блоков питания
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(psus_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        psus_list, 6
+    )  # Создаем объект Paginator, разбивающий список блоков питания на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        psus = paginator.page(page)
-    except PageNotAnInteger:
-        psus = paginator.page(1)
-    except EmptyPage:
-        psus = paginator.page(paginator.num_pages)
+        psus = paginator.page(page)  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        psus = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        psus = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
-    return render(request, 'components/psu_list.html', {'psus': psus, 'form': form, 'stock_dict': stock_dict})
+    return render(
+        request,
+        'components/psu_list.html',
+        {'psus': psus, 'form': form, 'stock_dict': stock_dict},
+    )  # Отображаем шаблон списка блоков питания, передавая контекст
 
 
 def case_list(request):
-    form = CaseSearchForm(request.GET)
-    cases_list = Case.objects.all()
+    """Отображает список корпусов с возможностью фильтрации и поиска."""
+    form = CaseSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска корпусов, передавая параметры из GET запроса
+    cases_list = Case.objects.all()  # Получаем все корпуса из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        form_factor = form.cleaned_data.get('form_factor')
-        dimensions = form.cleaned_data.get('dimensions')
-        side_panel_window = form.cleaned_data.get('side_panel_window')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        form_factor = form.cleaned_data.get(
+            'form_factor'
+        )  # Получаем выбранный форм-фактор из очищенных данных формы
+        dimensions = form.cleaned_data.get(
+            'dimensions'
+        )  # Получаем выбранные размеры из очищенных данных формы
+        side_panel_window = form.cleaned_data.get(
+            'side_panel_window'
+        )  # Получаем значение флага "боковое окно" из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             cases_list = cases_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
-        if manufacturers:
-            cases_list = cases_list.filter(manufacturer__id__in=manufacturers)
-        if form_factor:
-            cases_list = cases_list.filter(form_factor__icontains=form_factor)
-        if dimensions:
-            cases_list = cases_list.filter(dimensions__icontains=dimensions)
-        if side_panel_window:
-            cases_list = cases_list.filter(side_panel_window=True)
+            ).distinct()  # Фильтруем корпуса по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
+        if manufacturers:  # Если выбраны производители
+            cases_list = cases_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем корпуса по выбранным производителям
+        if form_factor:  # Если выбран форм-фактор
+            cases_list = cases_list.filter(
+                form_factor__icontains=form_factor
+            )  # Фильтруем корпуса по выбранному форм-фактору
+        if dimensions:  # Если выбраны размеры
+            cases_list = cases_list.filter(
+                dimensions__icontains=dimensions
+            )  # Фильтруем корпуса по выбранным размерам
+        if side_panel_window:  # Если установлен флаг "боковое окно"
+            cases_list = cases_list.filter(
+                side_panel_window=True
+            )  # Фильтруем корпуса, у которых есть боковое окно
 
     # Get all Stock objects for Cases
-    stock_items = Stock.objects.filter(component_type='case')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='case'
+    )  # Получаем все записи о наличии для корпусов
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(cases_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        cases_list, 6
+    )  # Создаем объект Paginator, разбивающий список корпусов на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        cases = paginator.page(page)
-    except PageNotAnInteger:
-        cases = paginator.page(1)
-    except EmptyPage:
-        cases = paginator.page(paginator.num_pages)
+        cases = paginator.page(page)  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        cases = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        cases = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
-    return render(request, 'components/case_list.html', {'cases': cases, 'form': form, 'stock_dict': stock_dict})
+    return render(
+        request,
+        'components/case_list.html',
+        {'cases': cases, 'form': form, 'stock_dict': stock_dict},
+    )  # Отображаем шаблон списка корпусов, передавая контекст
 
 
 def cooler_list(request):
-    form = CoolerSearchForm(request.GET)
-    coolers_list = Cooler.objects.all()
+    """Отображает список систем охлаждения с возможностью фильтрации и поиска."""
+    form = CoolerSearchForm(
+        request.GET
+    )  # Создаем экземпляр формы поиска систем охлаждения, передавая параметры из GET запроса
+    coolers_list = Cooler.objects.all()  # Получаем все системы охлаждения из базы данных
 
-    if form.is_valid():
-        q = form.cleaned_data.get('q')
-        manufacturers = form.cleaned_data.get('manufacturer')
-        cooler_type = form.cleaned_data.get('cooler_type')
-        fan_size = form.cleaned_data.get('fan_size')
-        rgb = form.cleaned_data.get('rgb')
+    if form.is_valid():  # Проверяем, прошла ли форма валидацию
+        q = form.cleaned_data.get(
+            'q'
+        )  # Получаем поисковой запрос из очищенных данных формы
+        manufacturers = form.cleaned_data.get(
+            'manufacturer'
+        )  # Получаем выбранных производителей из очищенных данных формы
+        cooler_type = form.cleaned_data.get(
+            'cooler_type'
+        )  # Получаем выбранный тип системы охлаждения из очищенных данных формы
+        fan_size = form.cleaned_data.get(
+            'fan_size'
+        )  # Получаем выбранный размер вентилятора из очищенных данных формы
+        rgb = form.cleaned_data.get(
+            'rgb'
+        )  # Получаем значение флага "RGB подсветка" из очищенных данных формы
 
-        if q:
+        if q:  # Если есть поисковой запрос
             coolers_list = coolers_list.filter(
                 Q(manufacturer__name__icontains=q) | Q(model__icontains=q)
-            ).distinct()
+            ).distinct()  # Фильтруем системы охлаждения по производителю или модели, используя поисковой запрос
+                                # Q позволяет делать сложные запросы с использованием "или" ( | )
+                                # distinct() убирает дубликаты
         if manufacturers:  # Check if manufacturer is selected
-            coolers_list = coolers_list.filter(manufacturer__id__in=manufacturers)
-        if cooler_type:
-            coolers_list = coolers_list.filter(cooler_type=cooler_type)
-        if fan_size:
-            coolers_list = coolers_list.filter(fan_size=fan_size)
-        if rgb:
-            coolers_list = coolers_list.filter(rgb=rgb)
+            coolers_list = coolers_list.filter(
+                manufacturer__id__in=manufacturers
+            )  # Фильтруем системы охлаждения по выбранным производителям
+        if cooler_type:  # Если выбран тип системы охлаждения
+            coolers_list = coolers_list.filter(
+                cooler_type=cooler_type
+            )  # Фильтруем системы охлаждения по выбранному типу
+        if fan_size:  # Если выбран размер вентилятора
+            coolers_list = coolers_list.filter(
+                fan_size=fan_size
+            )  # Фильтруем системы охлаждения по выбранному размеру вентилятора
+        if rgb:  # Если установлен флаг "RGB подсветка"
+            coolers_list = coolers_list.filter(
+                rgb=rgb
+            )  # Фильтруем системы охлаждения, у которых есть RGB подсветка
 
     # Get all Stock objects for Coolers
-    stock_items = Stock.objects.filter(component_type='cooler')
-    stock_dict = {item.component_id: item for item in stock_items}
+    stock_items = Stock.objects.filter(
+        component_type='cooler'
+    )  # Получаем все записи о наличии для систем охлаждения
+    stock_dict = {
+        item.component_id: item for item in stock_items
+    }  # Создаем словарь, где ключ - ID компонента, значение - объект Stock
 
-    paginator = Paginator(coolers_list, 6)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        coolers_list, 6
+    )  # Создаем объект Paginator, разбивающий список систем охлаждения на страницы по 6 штук
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET запроса
     try:
-        coolers = paginator.page(page)
-    except PageNotAnInteger:
-        coolers = paginator.page(1)
-    except EmptyPage:
-        coolers = paginator.page(paginator.num_pages)
+        coolers = paginator.page(
+            page
+        )  # Получаем объект Page для текущей страницы
+    except PageNotAnInteger:  # Если номер страницы не является целым числом
+        coolers = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом)
+    except EmptyPage:  # Если запрошенная страница не существует
+        coolers = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц)
 
     return render(
         request,
         'components/cooler_list.html',
-        {'coolers': coolers, 'form': form, 'stock_dict': stock_dict},
-    )
+        {
+            'coolers': coolers,
+            'form': form,
+            'stock_dict': stock_dict,
+        },
+    )  # Отображаем шаблон списка систем охлаждения, передавая контекст
 
 
 def get_stock_status(component_type, component_id):
@@ -379,188 +668,333 @@ def get_stock_status(component_type, component_id):
     Возвращает True, если товар есть в наличии, False - если нет.
     """
     try:
-        stock = Stock.objects.get(component_type=component_type, component_id=component_id)
-        return stock.quantity > 0
+        stock = Stock.objects.get(
+            component_type=component_type, component_id=component_id
+        )  # Получаем информацию о наличии товара на складе по типу и ID компонента.
+        return (
+            stock.quantity > 0
+        )  # Возвращаем True, если количество товара на складе больше нуля, и False в противном случае.
     except Stock.DoesNotExist:
-        return False  # Или True, если отсутствие записи означает наличие на складе
+        return (
+            False
+        )  # Или True, если отсутствие записи означает наличие на складе. Возвращаем False, если информация о наличии товара не найдена.
 
 
 def cpu_detail(request, pk):
-    cpu = get_object_or_404(CPU, pk=pk)
+    """Отображает детальную информацию о процессоре."""
+    cpu = get_object_or_404(
+        CPU, pk=pk
+    )  # Получаем процессор по ID или возвращаем 404, если не найден.
     try:
-        stock = Stock.objects.get(component_type='cpu', component_id=cpu.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='cpu', component_id=cpu.id
+        )  # Пытаемся получить информацию о наличии процессора на складе.
+        stock_quantity = stock.quantity  # Получаем количество процессоров на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли процессор в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/cpu_detail.html',
-        {'cpu': cpu, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'cpu': cpu,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о процессоре.
 
 
 def gpu_detail(request, pk):
-    gpu = get_object_or_404(GPU, pk=pk)
+    """Отображает детальную информацию о видеокарте."""
+    gpu = get_object_or_404(
+        GPU, pk=pk
+    )  # Получаем видеокарту по ID или возвращаем 404, если не найдена.
     try:
-        stock = Stock.objects.get(component_type='gpu', component_id=gpu.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='gpu', component_id=gpu.id
+        )  # Пытаемся получить информацию о наличии видеокарты на складе.
+        stock_quantity = stock.quantity  # Получаем количество видеокарт на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли видеокарта в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/gpu_detail.html',
-        {'gpu': gpu, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'gpu': gpu,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о видеокарте.
 
 
 def motherboard_detail(request, pk):
-    motherboard = get_object_or_404(Motherboard, pk=pk)
+    """Отображает детальную информацию о материнской плате."""
+    motherboard = get_object_or_404(
+        Motherboard, pk=pk
+    )  # Получаем материнскую плату по ID или возвращаем 404, если не найдена.
     try:
-        stock = Stock.objects.get(component_type='motherboard', component_id=motherboard.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='motherboard', component_id=motherboard.id
+        )  # Пытаемся получить информацию о наличии материнской платы на складе.
+        stock_quantity = (
+            stock.quantity
+        )  # Получаем количество материнских плат на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли материнская плата в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/motherboard_detail.html',
-        {'motherboard': motherboard, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'motherboard': motherboard,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о материнской плате.
 
 
 def ram_detail(request, pk):
-    ram = get_object_or_404(RAM, pk=pk)
+    """Отображает детальную информацию об оперативной памяти."""
+    ram = get_object_or_404(
+        RAM, pk=pk
+    )  # Получаем модуль оперативной памяти по ID или возвращаем 404, если не найден.
     try:
-        stock = Stock.objects.get(component_type='ram', component_id=ram.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='ram', component_id=ram.id
+        )  # Пытаемся получить информацию о наличии модуля памяти на складе.
+        stock_quantity = stock.quantity  # Получаем количество модулей памяти на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли модуль памяти в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/ram_detail.html',
-        {'ram': ram, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'ram': ram,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о модуле памяти.
 
 
 def storage_detail(request, pk):
-    storage = get_object_or_404(Storage, pk=pk)
+    """Отображает детальную информацию о накопителе."""
+    storage = get_object_or_404(
+        Storage, pk=pk
+    )  # Получаем накопитель по ID или возвращаем 404, если не найден.
     try:
-        stock = Stock.objects.get(component_type='storage', component_id=storage.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='storage', component_id=storage.id
+        )  # Пытаемся получить информацию о наличии накопителя на складе.
+        stock_quantity = stock.quantity  # Получаем количество накопителей на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли накопитель в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/storage_detail.html',
-        {'storage': storage, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'storage': storage,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о накопителе.
 
 
 def psu_detail(request, pk):
-    psu = get_object_or_404(PSU, pk=pk)
+    """Отображает детальную информацию о блоке питания."""
+    psu = get_object_or_404(
+        PSU, pk=pk
+    )  # Получаем блок питания по ID или возвращаем 404, если не найден.
     try:
-        stock = Stock.objects.get(component_type='psu', component_id=psu.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='psu', component_id=psu.id
+        )  # Пытаемся получить информацию о наличии блока питания на складе.
+        stock_quantity = stock.quantity  # Получаем количество блоков питания на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли блок питания в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/psu_detail.html',
-        {'psu': psu, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'psu': psu,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о блоке питания.
 
 
 def case_detail(request, pk):
-    case = get_object_or_404(Case, pk=pk)
+    """Отображает детальную информацию о корпусе."""
+    case = get_object_or_404(
+        Case, pk=pk
+    )  # Получаем корпус по ID или возвращаем 404, если не найден.
     try:
-        stock = Stock.objects.get(component_type='case', component_id=case.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='case', component_id=case.id
+        )  # Пытаемся получить информацию о наличии корпуса на складе.
+        stock_quantity = stock.quantity  # Получаем количество корпусов на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли корпус в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/case_detail.html',
-        {'case': case, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'case': case,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о корпусе.
 
 
 def cooler_detail(request, pk):
-    cooler = get_object_or_404(Cooler, pk=pk)
+    """Отображает детальную информацию о системе охлаждения."""
+    cooler = get_object_or_404(
+        Cooler, pk=pk
+    )  # Получаем систему охлаждения по ID или возвращаем 404, если не найдена.
     try:
-        stock = Stock.objects.get(component_type='cooler', component_id=cooler.id)
-        stock_quantity = stock.quantity
-        in_stock = stock_quantity > 0
-    except Stock.DoesNotExist:
-        in_stock = False
-        stock_quantity = 0
-    review_form = ReviewForm()
+        stock = Stock.objects.get(
+            component_type='cooler', component_id=cooler.id
+        )  # Пытаемся получить информацию о наличии системы охлаждения на складе.
+        stock_quantity = stock.quantity  # Получаем количество систем охлаждения на складе.
+        in_stock = (
+            stock_quantity > 0
+        )  # Определяем, есть ли система охлаждения в наличии (количество > 0).
+    except Stock.DoesNotExist:  # Если информация о наличии не найдена.
+        in_stock = False  # Устанавливаем флаг "в наличии" в False.
+        stock_quantity = 0  # Устанавливаем количество на складе в 0.
+    review_form = (
+        ReviewForm()
+    )  # Создаем экземпляр формы для добавления отзыва.
     return render(
         request,
         'components/cooler_detail.html',
-        {'cooler': cooler, 'review_form': review_form, 'in_stock': in_stock, 'stock_quantity': stock_quantity},
-    )
+        {
+            'cooler': cooler,
+            'review_form': review_form,
+            'in_stock': in_stock,
+            'stock_quantity': stock_quantity,
+        },
+    )  # Отображаем страницу с детальной информацией о системе охлаждения.
 
 
-@login_required
+@login_required  # Требуется авторизация пользователя.
 def add_review(request, pk, component_type):
-    if request.method == 'POST':
-        form = ReviewForm(request.POST)
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.user = request.user
+    """Добавляет отзыв к компоненту."""
+    if request.method == 'POST':  # Если это POST запрос.
+        form = ReviewForm(
+            request.POST
+        )  # Создаем экземпляр формы для добавления отзыва, передавая данные из POST запроса.
+        if form.is_valid():  # Если форма валидна.
+            review = form.save(
+                commit=False
+            )  # Создаем объект отзыва, но не сохраняем его в базу данных.
+            review.user = request.user  # Устанавливаем пользователя, оставившего отзыв.
 
-            if component_type == 'cpu':
-                component = get_object_or_404(CPU, pk=pk)
-            elif component_type == 'gpu':
-                component = get_object_or_404(GPU, pk=pk)
-            elif component_type == 'motherboard':
-                component = get_object_or_404(Motherboard, pk=pk)
-            elif component_type == 'ram':
-                component = get_object_or_404(RAM, pk=pk)
-            elif component_type == 'storage':
-                component = get_object_or_404(Storage, pk=pk)
-            elif component_type == 'psu':
-                component = get_object_or_404(PSU, pk=pk)
-            elif component_type == 'case':
-                component = get_object_or_404(Case, pk=pk)
-            elif component_type == 'cooler':
-                component = get_object_or_404(Cooler, pk=pk)
-            else:
-                raise ValueError("Неверный тип компонента")
+            if component_type == 'cpu':  # Если тип компонента - процессор.
+                component = get_object_or_404(
+                    CPU, pk=pk
+                )  # Получаем процессор по ID или возвращаем 404, если не найден.
+            elif component_type == 'gpu':  # Если тип компонента - видеокарта.
+                component = get_object_or_404(
+                    GPU, pk=pk
+                )  # Получаем видеокарту по ID или возвращаем 404, если не найдена.
+            elif component_type == 'motherboard':  # Если тип компонента - материнская плата.
+                component = get_object_or_404(
+                    Motherboard, pk=pk
+                )  # Получаем материнскую плату по ID или возвращаем 404, если не найдена.
+            elif component_type == 'ram':  # Если тип компонента - оперативная память.
+                component = get_object_or_404(
+                    RAM, pk=pk
+                )  # Получаем модуль памяти по ID или возвращаем 404, если не найден.
+            elif component_type == 'storage':  # Если тип компонента - накопитель.
+                component = get_object_or_404(
+                    Storage, pk=pk
+                )  # Получаем накопитель по ID или возвращаем 404, если не найден.
+            elif component_type == 'psu':  # Если тип компонента - блок питания.
+                component = get_object_or_404(
+                    PSU, pk=pk
+                )  # Получаем блок питания по ID или возвращаем 404, если не найден.
+            elif component_type == 'case':  # Если тип компонента - корпус.
+                component = get_object_or_404(
+                    Case, pk=pk
+                )  # Получаем корпус по ID или возвращаем 404, если не найден.
+            elif component_type == 'cooler':  # Если тип компонента - система охлаждения.
+                component = get_object_or_404(
+                    Cooler, pk=pk
+                )  # Получаем систему охлаждения по ID или возвращаем 404, если не найдена.
+            else:  # Если тип компонента неверный.
+                raise ValueError("Неверный тип компонента")  # Вызываем исключение.
 
-            if component:
-                review.content_object = component
-                review.save()
+            if component:  # Если компонент найден.
+                review.content_object = (
+                    component  # Устанавливаем компонент, к которому относится отзыв.
+                )
+                review.save()  # Сохраняем отзыв в базу данных.
                 # Construct the URL based on the component type and ID.
                 return redirect(
                     reverse(
                         f'components:{component_type}_detail', kwargs={'pk': pk}
                     )
-                )
+                )  # Перенаправляем на страницу с детальной информацией о компоненте.
             else:
                 # Handle the case where no component was found.  This should ideally never happen
                 # given the get_object_or_404 calls, but it's good to be defensive.
-                return redirect('home')  # Or some other safe default.
+                return redirect(
+                    'home'
+                )  # Or some other safe default. # Обрабатываем случай, когда компонент не найден.
         else:
             # Если форма не валидна, нужно передать ее обратно в шаблон, чтобы показать ошибки.
             # Determine the component type and ID to render the detail template correctly
@@ -573,79 +1007,140 @@ def add_review(request, pk, component_type):
                 return redirect('home')
 
             return render(request, template, {'component': component, 'review_form': form})
+
     else:
         # Если метод не POST, это ошибка.  Нужно перенаправить пользователя или показать страницу с ошибкой.
-        return redirect('home')  # Или другая подходящая страница.
+        return (
+            redirect('home')
+        )  # Или другая подходящая страница. # Если метод не POST, перенаправляем пользователя на главную страницу.
 
 
 def is_employee(user):  # Assuming you have this function
-    return user.is_staff
+    """Проверяет, является ли пользователь сотрудником."""
+    return user.is_staff  # Возвращает True, если пользователь является сотрудником (is_staff=True).
 
 
-@login_required
-@user_passes_test(lambda u: u.is_staff)
+@login_required  # Требуется авторизация пользователя.
+@user_passes_test(
+    lambda u: u.is_staff
+)  # Требуется, чтобы пользователь был сотрудником (проверка через анонимную функцию).
 def replenish_stock_item(request, pk):
     """Пополняет запас выбранного элемента на 10."""
-    stock_item = get_object_or_404(Stock, pk=pk)
-    stock_item.quantity += 10
-    stock_item.save()
+    stock_item = get_object_or_404(
+        Stock, pk=pk
+    )  # Получаем информацию о наличии товара на складе по ID или возвращаем 404, если не найдена.
+    stock_item.quantity += (
+        10  # Увеличиваем количество товара на складе на 10.
+    )
+    stock_item.save()  # Сохраняем изменения в базе данных.
 
     # Get the out of stock count after replenishing
     out_of_stock_count = Stock.objects.filter(quantity=0).count()
 
     # Redirect with the out_of_stock_count as a query parameter
     url = reverse('components:stock_list') + f'?out_of_stock_count={out_of_stock_count}'
-    return HttpResponseRedirect(url)
+    return HttpResponseRedirect(url)  # Перенаправляем на страницу со списком товаров с информацией об измененном количестве отсутствующих товаров.
 
 
-@login_required
-@user_passes_test(is_employee)
+@login_required  # Требуется авторизация пользователя.
+@user_passes_test(
+    is_employee
+)  # Требуется, чтобы пользователь был сотрудником (проверка через функцию is_employee).
 def reduce_stock_item(request, pk):
     """Уменьшает запас выбранного элемента на 10."""
-    stock_item = get_object_or_404(Stock, pk=pk)
-    stock_item.quantity -= 10
-    if stock_item.quantity < 0:
-        stock_item.quantity = 0  # Предотвращаем отрицательное количество
-    stock_item.save()
-    return HttpResponseRedirect(reverse('components:stock_list'))
+    stock_item = get_object_or_404(
+        Stock, pk=pk
+    )  # Получаем информацию о наличии товара на складе по ID или возвращаем 404, если не найдена.
+    stock_item.quantity -= (
+        10  # Уменьшаем количество товара на складе на 10.
+    )
+    if stock_item.quantity < 0:  # Если количество товара стало отрицательным.
+        stock_item.quantity = (
+            0  # Предотвращаем отрицательное количество. Устанавливаем количество товара в 0.
+        )
+    stock_item.save()  # Сохраняем изменения в базе данных.
+    return HttpResponseRedirect(
+        reverse('components:stock_list')
+    )  # Перенаправляем на страницу со списком товаров.
 
 
-@login_required
-@user_passes_test(lambda u: u.is_staff)
+@login_required  # Требуется авторизация пользователя.
+@user_passes_test(
+    lambda u: u.is_staff
+)  # Требуется, чтобы пользователь был сотрудником (проверка через анонимную функцию).
 def stock_list_view(request):
-    query = request.GET.get('q')
-    stock_items = Stock.objects.all()
+    """Отображает список товаров на складе с возможностью поиска."""
+    query = request.GET.get(
+        'q'
+    )  # Получаем поисковой запрос из GET параметров.
+    stock_items = Stock.objects.all()  # Получаем все записи о наличии товаров на складе.
 
-    if query:
-        filtered_stock_items = []
-        for stock_item in stock_items:
-            component = None
+    if query:  # Если есть поисковой запрос.
+        filtered_stock_items = []  # Создаем пустой список для отфильтрованных записей.
+        for stock_item in stock_items:  # Для каждой записи о наличии товара на складе.
+            component = None  # Инициализируем переменную для компонента.
             try:
-                if stock_item.component_type == 'cpu':
-                    component = CPU.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'gpu':
-                    component = GPU.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'motherboard':
-                    component = Motherboard.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'ram':
-                    component = RAM.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'storage':
-                    component = Storage.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'psu':
-                    component = PSU.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'case':
-                    component = Case.objects.get(pk=stock_item.component_id)
-                elif stock_item.component_type == 'cooler':
-                    component = Cooler.objects.get(pk=stock_item.component_id)
+                if (
+                    stock_item.component_type == 'cpu'
+                ):  # Если тип компонента - процессор.
+                    component = CPU.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем процессор по ID.
+                elif (
+                    stock_item.component_type == 'gpu'
+                ):  # Если тип компонента - видеокарта.
+                    component = GPU.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем видеокарту по ID.
+                elif (
+                    stock_item.component_type == 'motherboard'
+                ):  # Если тип компонента - материнская плата.
+                    component = Motherboard.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем материнскую плату по ID.
+                elif (
+                    stock_item.component_type == 'ram'
+                ):  # Если тип компонента - оперативная память.
+                    component = RAM.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем модуль памяти по ID.
+                elif (
+                    stock_item.component_type == 'storage'
+                ):  # Если тип компонента - накопитель.
+                    component = Storage.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем накопитель по ID.
+                elif (
+                    stock_item.component_type == 'psu'
+                ):  # Если тип компонента - блок питания.
+                    component = PSU.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем блок питания по ID.
+                elif (
+                    stock_item.component_type == 'case'
+                ):  # Если тип компонента - корпус.
+                    component = Case.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем корпус по ID.
+                elif (
+                    stock_item.component_type == 'cooler'
+                ):  # Если тип компонента - система охлаждения.
+                    component = Cooler.objects.get(
+                        pk=stock_item.component_id
+                    )  # Получаем систему охлаждения по ID.
 
-                if component:
+                if component:  # Если компонент найден.
                     component_name = (
                         f"{component.manufacturer} {component.model}"  # Получаем имя компонента
                     )
-                    if (query.lower() in component_name.lower()) or (
+                    if (
+                        query.lower() in component_name.lower()
+                    ) or (
                         query.lower() in str(stock_item.quantity).lower()
                     ):  # добавил поиск по quantity
-                        filtered_stock_items.append(stock_item)
+                        filtered_stock_items.append(
+                            stock_item
+                        )  # Если поисковой запрос содержится в имени компонента или количестве, добавляем запись в отфильтрованный список.
 
             except (
                 CPU.DoesNotExist,
@@ -656,23 +1151,39 @@ def stock_list_view(request):
                 PSU.DoesNotExist,
                 Case.DoesNotExist,
                 Cooler.DoesNotExist,
-            ):
+            ):  # Если компонент не найден.
                 pass  # Просто игнорируем, если компонент не найден
 
-        stock_items = filtered_stock_items  # Заменяем stock_items отфильтрованным списком
+        stock_items = (
+            filtered_stock_items  # Заменяем stock_items отфильтрованным списком
+        )
 
-    paginator = Paginator(stock_items, 10)
-    page = request.GET.get('page')
+    paginator = Paginator(
+        stock_items, 10
+    )  # Создаем объект Paginator, разбивающий список товаров на складе на страницы по 10 штук.
+    page = request.GET.get('page')  # Получаем номер текущей страницы из GET параметров.
     try:
-        stock_items = paginator.get_page(page)
-    except PageNotAnInteger:
-        stock_items = paginator.page(1)
-    except EmptyPage:
-        stock_items = paginator.page(paginator.num_pages)
+        stock_items = paginator.get_page(
+            page
+        )  # Получаем объект Page для текущей страницы.
+    except PageNotAnInteger:  # Если номер страницы не является целым числом.
+        stock_items = paginator.page(
+            1
+        )  # Получаем первую страницу (если номер страницы не указан или не является числом).
+    except EmptyPage:  # Если запрошенная страница не существует.
+        stock_items = paginator.page(
+            paginator.num_pages
+        )  # Получаем последнюю страницу (если номер страницы больше, чем общее количество страниц).
 
     # Get out of stock count
     out_of_stock_count = Stock.objects.filter(quantity=0).count()
 
 
-    context = {'stock_items': stock_items, 'query': query, 'out_of_stock_count': out_of_stock_count}
-    return render(request, 'builds/stock_list.html', context)
+    context = {
+        'stock_items': stock_items,
+        'query': query,
+        'out_of_stock_count': out_of_stock_count,
+    }  # Создаем контекст для шаблона.
+    return render(
+        request, 'builds/stock_list.html', context
+    )  # Отображаем страницу со списком товаров на складе.

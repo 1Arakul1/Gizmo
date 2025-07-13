@@ -2,15 +2,15 @@
 from pathlib import Path
 import os
 import sys
-
+import pyodbc
 from dotenv import load_dotenv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, os.path.join(BASE_DIR, ''))
 sys.path.insert(0, os.path.join(BASE_DIR, ''))
 
-# Load environment variables from .env file
+
 load_dotenv()
 """
 Загрузка настроек проекта Django.
@@ -70,8 +70,7 @@ MIDDLEWARE = [
     'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
-# settings.py
-ROOT_URLCONF = 'pc_builder.urls'  # Убедись, что это правильно!
+ROOT_URLCONF = 'pc_builder.urls'
 
 import os
 
@@ -79,7 +78,7 @@ import os
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Важно! Укажите путь к директории с шаблонами
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -92,7 +91,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'pc_builder.wsgi.application'  # Убедись, что это правильно!
+WSGI_APPLICATION = 'pc_builder.wsgi.application'
 
 
 DATABASES = {
@@ -116,7 +115,7 @@ DATABASES = {
     }
 }
 
-# Password validation
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -132,40 +131,40 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
+
 LANGUAGE_CODE = 'ru-RU'  # Или 'ru'
 USE_I18N = True
-USE_L10N = True  # Рекомендуется True для локализации
-TIME_ZONE = 'Europe/Moscow'  # Ваш часовой пояс  # Или ваш часовой пояс, например 'Europe/Moscow'
+USE_L10N = True
+TIME_ZONE = 'Europe/Moscow'
 
 INTERNAL_IPS = [
     "127.0.0.1",
-    # "192.168.1.1",  # Замените на свой IP-адрес или используйте '*'
+    
 ]
 INTERNAL_IPS = ["*"]
 
 
 
-STATIC_URL = '/static/'  # Важно, чтобы начинался и заканчивался слэшем
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR.parent / 'static',  # Используй .parent, чтобы подняться на уровень выше
+    BASE_DIR.parent / 'static',
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Папка для сбора статики для продакшена
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = '/media/'  # URL для доступа к медиафайлам
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Путь к папке для сохранения медиафайлов
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Default primary key field type
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# settings.py
-LOGIN_URL = 'users:login'  # Используем имя URL из urls.py приложения users
-LOGIN_REDIRECT_URL = '/'  # Или другое значение
-AUTH_USER_MODEL = 'auth.User'
-# settings.py
 
-# settings.py
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = '/'
+AUTH_USER_MODEL = 'auth.User'
+
+
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'  # Хост Yandex.Mail
@@ -183,7 +182,7 @@ logger = logging.getLogger(__name__)
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Или 'redis://:your_password@127.0.0.1:6379/1' если есть пароль
+        'LOCATION': 'redis://127.0.0.1:6379/1',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -211,7 +210,7 @@ LOGGING = {
     },
     'loggers': {
         'django.db.backends': {
-            'level': 'WARNING',  # ИЗМЕНИТЕ ЗДЕСЬ
+            'level': 'WARNING',
             'handlers': ['console', 'file'],
         },
         '': {
@@ -226,7 +225,6 @@ CACHE_MIDDLEWARE_ALIAS = "default"  # Используем кэш по умол�
 CACHE_MIDDLEWARE_SECONDS =0 # Кэшировать на 15 минут (в секундах)
 CACHE_MIDDLEWARE_KEY_PREFIX = ""  # Префикс для ключей кэша # Префикс для ключей кэшаючей кэша
 
-#!/usr/bin/env python
 """
 Скрипт для создания базы данных MS SQL Server.
 
@@ -234,60 +232,6 @@ CACHE_MIDDLEWARE_KEY_PREFIX = ""  # Префикс для ключей кэша 
 Он использует параметры подключения, указанные в файле .env.
 """
 print("СТАРТ")
-import os
-import pyodbc
-from dotenv import load_dotenv
-
-
-def create_database():
-    """
-    Создает базу данных MS SQL Server, если она не существует.
-
-    Считывает параметры подключения из переменных окружения, загруженных из .env файла.
-    Проверяет, существует ли база данных с указанным именем, и, если нет, создает ее.
-    """
-    load_dotenv()
-
-    db_name = os.getenv("DJANGO_DATABASE_NAME", "")  # Имя базы данных из env, по умолчанию "Bony"
-    db_user = os.getenv("DJANGO_DATABASE_USER")
-    db_password = os.getenv("DJANGO_DATABASE_PASSWORD")
-    db_host = os.getenv("DJANGO_DATABASE_HOST")
-
-    if not all([db_user, db_password, db_host]):
-        print("Ошибка: Не все необходимые переменные окружения установлены.")
-        return
-
-    connection_string = (
-        f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={db_host};UID={db_user};PWD={db_password}'
-    )
-    cnxn = None
-
-    try:
-        cnxn = pyodbc.connect(connection_string, autocommit=True)
-        cursor = cnxn.cursor()
-
-        # Проверяем, существует ли база данных
-        cursor.execute(f"SELECT database_id FROM sys.databases WHERE name = '{db_name}'")
-        result = cursor.fetchone()
-
-        if result:
-            print(f"База данных '{db_name}' уже существует.")
-            return
-
-        # Создаем базу данных
-        cursor.execute(f"CREATE DATABASE {db_name}")
-        print(f"База данных '{db_name}' успешно создана.")
-
-    except pyodbc.Error as ex:
-        print(f"Ошибка при создании базы данных: {ex}")
-
-    finally:
-        if cnxn:
-            cnxn.close()
-
-
-if __name__ == "__main__":
-    create_database()
 
 
 CACHE_MIDDLEWARE_IGNORE_PATHS = [
