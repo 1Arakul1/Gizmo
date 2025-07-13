@@ -197,16 +197,20 @@ def get_cart_context(request):
     """Получает контекст корзины для авторизованных пользователей."""
     cart_items = []
     total_price = Decimal('0.0')
-    if request.user.is_authenticated:  # Проверяем, авторизован ли пользователь.
-        cart_items = CartItem.objects.filter(
-            user=request.user
-        )  # Получаем элементы корзины для текущего пользователя.
+    if request.user.is_authenticated:
+        cart_items = CartItem.objects.filter(user=request.user)
         for item in cart_items:
-            total_price += item.get_total_price()  # Суммируем стоимость товаров в корзине.
+            try:
+                item_price = item.get_total_price()
+                logger.debug(f"Item: {item}, Price: {item_price}, Quantity: {item.quantity}") # LOG
+                total_price += item_price
+            except Exception as e:
+                logger.error(f"Ошибка при обработке элемента корзины {item}: {e}")
+                # Можно принять решение об исключении этого элемента из корзины или обработать как-то иначе
     return {
         'cart_items': cart_items,
         'total_price': total_price,
-    }  # Возвращаем словарь с элементами корзины и общей стоимостью.
+    }
 
 
 @login_required  # Требуется авторизация пользователя
@@ -226,6 +230,9 @@ def cart_view(request):
             cart_items = CartItem.objects.filter(
                 user=request.user
             )  # Получаем элементы корзины для текущего пользователя.
+            print(f"Количество элементов в корзине: {len(cart_items)}")  # Лог!
+            for item in cart_items:  # Лог для каждого элемента
+                print(f"Элемент корзины: {item}")
             total_price = sum(
                 item.get_total_price() for item in cart_items
             )  # Суммируем стоимость товаров в корзине.
@@ -246,7 +253,7 @@ def cart_view(request):
         context = {'cart_items': [], 'total_price': 0}
         return render(
             request, 'builds/cart.html', context
-        )  # Если сессия не найдена, рендерим шаблон с пустой корзиной.
+        )  # Если сессия не найдена, рендерим шаблон с пустой корзино
 
 
 @login_required  # Требуется авторизация пользователя

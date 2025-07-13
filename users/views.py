@@ -18,6 +18,8 @@ from .utils import (
 )
 from builds.models import Build, CartItem, Order, OrderItem, ReturnRequest
 from decimal import Decimal
+from django.db.models import Q
+from .forms import PasswordResetForm 
 
 @login_required
 def profile(request):
@@ -97,18 +99,54 @@ def password_reset(request):
         email = request.POST.get('email')
         User = get_user_model()
         try:
-            user = User.objects.get(email=email)
-            alphabet = string.ascii_letters + string.digits + string.punctuation
-            new_password = ''.join(secrets.choice(alphabet) for i in range(12))
-            user.set_password(new_password)
-            user.save()
-            send_password_reset_email(user, new_password)
-            messages.success(request, 'Новый пароль отправлен на ваш email.')
-            return redirect('users:login')
-        except User.DoesNotExist:
-            messages.error(request, 'Пользователь с таким email не найден.')
+            users = User.objects.filter(Q(email__iexact=email))
+
+            if users.count() == 0:
+                messages.error(request, 'Пользователь с таким email не найден.')
+                return render(request, 'users/password_reset.html', {'email': email}) # Pass email to template
+            elif users.count() > 1:
+                messages.error(request, 'Найдено несколько пользователей с таким email. Обратитесь к администратору.')
+                return render(request, 'users/password_reset.html', {'email': email}) # Pass email to template
+            else:
+                user = users.first()
+                request.session['reset_user_id'] = user.id  # Store user ID in session
+                return redirect('users:password_reset_confirm') # Redirect to confirmation view
+        except Exception as e:
+            messages.error(request, f'Произошла ошибка: {e}')
+            print(f"ERROR: Ошибка при запросе сброса пароля: {e}")
             return render(request, 'users/password_reset.html')
     return render(request, 'users/password_reset.html')
+
+def password_reset_confirm(request):
+    """Подтверждает сброс пароля и позволяет пользователю ввести новый пароль."""
+    user_id = request.session.get('reset_user_id')
+
+    if not user_id:
+        messages.error(request, 'Некорректный запрос на сброс пароля.')
+        return redirect('users:password_reset')  # Redirect back to reset request
+
+    User = get_user_model()
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'Пользователь не найден.')
+        return redirect('users:password_reset')
+
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['new_password1']
+            user.set_password(new_password)
+            user.save()
+            del request.session['reset_user_id']  # Remove user ID from session
+            messages.success(request, 'Пароль успешно изменен. Теперь вы можете войти в систему.')
+            return redirect('users:login')
+        else:
+            return render(request, 'users/password_reset_confirm.html', {'form': form})
+    else:
+        form = PasswordResetForm()
+        return render(request, 'users/password_reset_confirm.html', {'form': form})
+
 
 def generate_confirmation_code():
     """Генерирует 6-значный код подтверждения."""

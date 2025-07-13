@@ -35,7 +35,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
 DEBUG = True  
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '188.225.127.177'] 
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '188.225.3.45'] 
 
 
 INSTALLED_APPS = [
@@ -97,7 +97,7 @@ WSGI_APPLICATION = 'pc_builder.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': os.getenv("DJANGO_DATABASE_NAME", "Games"),
+        'NAME': os.getenv("DJANGO_DATABASE_NAME", "Gizmo"),
         'USER': os.getenv('DJANGO_DATABASE_USER'),
         'PASSWORD': os.getenv('DJANGO_DATABASE_PASSWORD'),
         'HOST': os.getenv('DJANGO_DATABASE_HOST'),

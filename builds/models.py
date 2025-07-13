@@ -132,69 +132,69 @@ class CartItem(models.Model):
         blank=True,
         on_delete=models.CASCADE,
         verbose_name="Сборка",
-    )  # Связь с моделью сборки. Если сборка удалена, элемент корзины тоже удаляется.
+    )
     quantity = models.PositiveIntegerField(
         default=1, verbose_name="Количество"
-    )  # Количество данного элемента в корзине.
+    )
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
-    )  # Связь с моделью пользователя. При удалении пользователя удаляются все его элементы корзины.
+    )
     cpu = models.ForeignKey(
         CPU,
         on_delete=models.CASCADE,
         verbose_name="Процессор",
         blank=True,
         null=True,
-    )  # Связь с моделью процессора. Если процессор удален, элемент корзины тоже удаляется.
+    )
     gpu = models.ForeignKey(
         GPU,
         on_delete=models.CASCADE,
         verbose_name="Видеокарта",
         blank=True,
         null=True,
-    )  # Связь с моделью видеокарты. Если видеокарта удалена, элемент корзины тоже удаляется.
+    )
     motherboard = models.ForeignKey(
         Motherboard,
         on_delete=models.CASCADE,
         verbose_name="Материнская плата",
         blank=True,
         null=True,
-    )  # Связь с моделью материнской платы. Если материнская плата удалена, элемент корзины тоже удаляется.
+    )
     ram = models.ForeignKey(
         RAM,
         on_delete=models.CASCADE,
         verbose_name="Оперативная память",
         blank=True,
         null=True,
-    )  # Связь с моделью оперативной памяти. Если оперативная память удалена, элемент корзины тоже удаляется.
+    )
     storage = models.ForeignKey(
         Storage,
         on_delete=models.CASCADE,
         verbose_name="Накопитель",
         blank=True,
         null=True,
-    )  # Связь с моделью накопителя. Если накопитель удален, элемент корзины тоже удаляется.
+    )
     psu = models.ForeignKey(
         PSU,
         on_delete=models.CASCADE,
         verbose_name="Блок питания",
         blank=True,
         null=True,
-    )  # Связь с моделью блока питания. Если блок питания удален, элемент корзины тоже удаляется.
+    )
     case = models.ForeignKey(
         Case,
         on_delete=models.CASCADE,
         verbose_name="Корпус",
         blank=True,
         null=True,
-    )  # Связь с моделью корпуса. Если корпус удален, элемент корзины тоже удаляется.
+    )
     cooler = models.ForeignKey(
         Cooler,
         on_delete=models.CASCADE,
         verbose_name="Охлаждение",
         blank=True,
         null=True,
-    )  # Связь с моделью системы охлаждения. Если система охлаждения удалена, элемент корзины тоже удаляется.
+    )
 
     def __str__(self):
         """Строковое представление элемента корзины."""
@@ -202,80 +202,88 @@ class CartItem(models.Model):
             return (
                 f"Сборка {self.build.pk} в корзине для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине сборка.
+            )
         elif self.cpu:
             return (
                 f"CPU {self.cpu.manufacturer} {self.cpu.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине процессор.
+            )
         elif self.gpu:
             return (
                 f"GPU {self.gpu.manufacturer} {self.gpu.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине видеокарта.
+            )
         elif self.motherboard:
             return (
                 f"Motherboard {self.motherboard.manufacturer} "
                 f"{self.motherboard.model} для {self.user.username}"
-            )  # Возвращает строку, если в корзине материнская плата.
+            )
         elif self.ram:
             return (
                 f"RAM {self.ram.manufacturer} {self.ram.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине оперативная память.
+            )
         elif self.storage:
             return (
                 f"Storage {self.storage.manufacturer} {self.storage.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине накопитель.
+            )
         elif self.psu:
             return (
                 f"PSU {self.psu.manufacturer} {self.psu.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине блок питания.
+            )
         elif self.case:
             return (
                 f"Case {self.case.manufacturer} {self.case.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине корпус.
+            )
         elif self.cooler:
             return (
                 f"Cooler {self.cooler.manufacturer} {self.cooler.model} для "
                 f"{self.user.username}"
-            )  # Возвращает строку, если в корзине система охлаждения.
+            )
         else:
             return (
                 f"Неизвестный товар в корзине для {self.user.username}"
-            )  # Возвращает строку, если тип товара в корзине неизвестен.
+            )
 
     def get_total_price(self):
         """Вычисляет и возвращает общую стоимость элемента корзины с учетом количества."""
-        price = 0
-        if self.build:
-            price = self.build.total_price
-        elif self.cpu:
-            price = self.cpu.price
-        elif self.gpu:
-            price = self.gpu.price
-        elif self.motherboard:
-            price = self.motherboard.price
-        elif self.ram:
-            price = self.ram.price
-        elif self.storage:
-            price = self.storage.price
-        elif self.psu:
-            price = self.psu.price
-        elif self.case:
-            price = self.case.price
-        elif self.cooler:
-            price = self.cooler.price
-        return price * self.quantity  # Возвращает общую стоимость элемента корзины (цена * количество).
+        try:  # Оборачиваем в try-except для обработки возможных ошибок
+            price = 0
+            if self.build:
+                price = self.build.total_price or 0
+            elif self.cpu:
+                price = self.cpu.price or 0
+            elif self.gpu:
+                price = self.gpu.price or 0
+            elif self.motherboard:
+                price = self.motherboard.price or 0
+            elif self.ram:
+                price = self.ram.price or 0
+            elif self.storage:
+                price = self.storage.price or 0
+            elif self.psu:
+                price = self.psu.price or 0
+            elif self.case:
+                price = self.case.price or 0
+            elif self.cooler:
+                price = self.cooler.price or 0
+
+            quantity = self.quantity or 1
+            total = price * quantity
+            print(f"get_total_price: item={self}, price={price}, quantity={quantity}, total={total}")  # Лог!
+            return total
+        except Exception as e:
+            print(f"Ошибка в get_total_price: {e}")
+            return 0  # Возвращаем 0 в случае ошибки
 
     class Meta:
         """Метаданные модели элемента корзины."""
 
-        verbose_name = "Элемент корзины"  # Название модели в единственном числе.
-        verbose_name_plural = "Элементы корзины"  # Название модели во множественном числе.
+        verbose_name = "Элемент корзины"
+        verbose_name_plural = "Элементы корзины"
 
 
 class Order(models.Model):

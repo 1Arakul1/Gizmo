@@ -169,7 +169,7 @@
 
     
 
-    <p>Общая стоимость: {{ build.total_price }}</p>
+    <p>Общая стоимость: {{ build.get_total_price|floatformat:2 }} ₽</p>
 
     <a href="{% url 'builds:build_edit' build.pk %}" class="btn btn-warning mt-3">Редактировать сборку</a>  <!-- Добавлена кнопка -->
     <a href="{% url 'games:predict_fps' %}?cpu={{ build.cpu.pk }}&gpu={{ build.gpu.pk }}" class="btn btn-primary mt-3">
